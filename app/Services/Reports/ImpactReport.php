@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace App\Services\Reports;
 
-use App\Helpers\Dates;
-use App\Models\Setting;
 
 final class ImpactReport extends Report
 {
@@ -45,29 +43,8 @@ final class ImpactReport extends Report
         }
         unset($x);
 
-        // Programme targets (from settings) against the last 12 months and today's registrations, independent of the filters
-        $s = Setting::all();
-        $today = Dates::todayYmd();
-        $yearAgo = Dates::dayRangeUtc((new \DateTimeImmutable($today))->modify('-364 days')->format('Y-m-d'));
-        $endRange = Dates::dayRangeUtc($today);
-        $kgYear = (float) $this->one("SELECT COALESCE(SUM(net_weight_kg), 0) FROM collection_transactions WHERE status = 'approved' AND recorded_at >= ? AND recorded_at < ?", [$yearAgo[0], $endRange[1]]);
-        $soldYear = (float) $this->one("SELECT COALESCE(SUM(COALESCE(received_kg, qty_kg)), 0) FROM stock_dispatches WHERE status = 'delivered' AND delivered_at >= ? AND delivered_at < ?", [$yearAgo[0], $endRange[1]]);
-        $pickersNow = (int) $this->one("SELECT COUNT(*) FROM pickers p JOIN users u ON u.id = p.user_id WHERE u.status = 'active'");
-        $hubsNow = (int) $this->one("SELECT COUNT(*) FROM collection_hubs WHERE status = 'active'");
-        $recNow = (int) $this->one("SELECT COUNT(*) FROM recyclers WHERE status = 'approved'");
-        $pct = static fn($actual, $target) => $target ? min(100.0, $actual / $target * 100) : null;
-        $targets = [
-            ['label' => 'Registered waste pickers (active), 12-month target', 'actual' => $pickersNow, 'target' => (int) ($s['target.pickers'] ?? 0)],
-            ['label' => 'Registered waste pickers (active), pilot target', 'actual' => $pickersNow, 'target' => (int) ($s['target.pilot_pickers'] ?? 0)],
-            ['label' => 'Active collection hubs', 'actual' => $hubsNow, 'target' => (int) ($s['target.hubs'] ?? 0)],
-            ['label' => 'Approved recycling companies', 'actual' => $recNow, 'target' => (int) ($s['target.recyclers'] ?? 0)],
-            ['label' => 'Plastic collected, last 12 months (kg)', 'actual' => $kgYear, 'target' => (int) ($s['target.kg_12_months'] ?? 0)],
-            ['label' => 'Plastic sold and delivered, last 12 months (kg)', 'actual' => $soldYear, 'target' => (int) ($s['target.kg_12_months'] ?? 0)],
-        ];
-        foreach ($targets as &$t) {
-            $t['progress'] = $pct($t['actual'], $t['target']);
-        }
-        unset($t);
+        // Programme targets against the last 12 months and today's registrations, independent of the filters\r
+        $targets = \App\Services\MonitoringService::targetProgress();
 
         $summary = [
             self::stat('Plastic collected (approved)', $c['kg'], 'kg'), self::stat('Plastic sold and delivered', $sold, 'kg'), self::stat('Approved collections', (int) $c['n'], 'int'),

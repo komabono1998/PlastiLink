@@ -26,6 +26,22 @@ $act = static function (string $decision, string $label, string $cls, string $co
       </dl>
     </div></div>
   </div>
+  <?php if (can('recyclers.manage')): ?>
+  <div class="col-12"><div class="card"><div class="card-body">
+    <h2 class="h6">Location on the map</h2>
+    <form method="post" action="<?= e(url('/recyclers/' . $r['id'] . '/location')) ?>" class="row g-2 align-items-end">
+      <?= csrf_field() ?>
+      <div class="col-6 col-md-3"><label class="form-label" for="rlat">Latitude</label><input class="form-control" id="rlat" name="latitude" inputmode="decimal" value="<?= e($r['latitude'] ?? '') ?>"></div>
+      <div class="col-6 col-md-3"><label class="form-label" for="rlng">Longitude</label><input class="form-control" id="rlng" name="longitude" inputmode="decimal" value="<?= e($r['longitude'] ?? '') ?>"></div>
+      <div class="col-12 col-md-6 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Save location</button>
+        <button class="btn btn-outline-secondary" type="button" data-geo-pick data-lat="#rlat" data-lng="#rlng" data-map="#geo-map" data-src="<?= e(asset('vendor/leaflet/leaflet.js')) ?>" data-css="<?= e(asset('vendor/leaflet/leaflet.css')) ?>"><i class="bi bi-geo-alt"></i> Pick on map</button>
+      </div>
+    </form>
+    <?= component('geo-picker', ['id' => 'geo-map']) ?>
+    <div class="form-text">Leave both empty to remove the location. Only the business is shown on maps, never a person's address.</div>
+  </div></div></div>
+  <?php endif; ?>
   <?php if (can('recyclers.approve')): ?>
   <div class="col-lg-5"><div class="card"><div class="card-body">
     <h2 class="h6">Decision</h2>

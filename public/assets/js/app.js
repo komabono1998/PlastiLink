@@ -137,6 +137,116 @@
     });
   }
 
+  // Maps: Leaflet (about 150 KB) and the street tiles are only fetched when someone asks for a map.
+  var leafletLoading = null;
+  function withLeaflet(src, css, then) {
+    if (window.L) { then(); return; }
+    if (!leafletLoading) {
+      leafletLoading = [];
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = css;
+      document.head.appendChild(link);
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function () { leafletLoading.splice(0).forEach(function (f) { f(); }); };
+      document.head.appendChild(s);
+    }
+    leafletLoading.push(then);
+  }
+  function baseLayer(el) {
+    return window.L.tileLayer(el.dataset.tile, { attribution: el.dataset.attribution || '', maxZoom: 19 });
+  }
+  function popupNode(lines) {          // built from text nodes, never from HTML strings
+    var d = document.createElement('div');
+    lines.forEach(function (t, i) {
+      if (i) d.appendChild(document.createElement('br'));
+      var n = i === 0 ? document.createElement('strong') : document.createElement('span');
+      n.textContent = t;
+      d.appendChild(n);
+    });
+    return d;
+  }
+  function kg(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US') + ' kg'; }
+
+  var mapBtn = document.querySelector('[data-map-toggle]');
+  if (mapBtn) {
+    var box = document.getElementById('monitor-map');
+    var label = mapBtn.querySelector('span');
+    var built = null;
+    var buildMap = function () {
+      var pts = JSON.parse(box.dataset.points);
+      var center = JSON.parse(box.dataset.center);
+      var map = window.L.map(box.querySelector('.monitor-map-canvas'));
+      baseLayer(box).addTo(map);
+      var maxKg = pts.hotspots.reduce(function (m, p) { return Math.max(m, p.kg); }, 0) || 1;
+      var groups = {
+        hotspots: window.L.layerGroup(pts.hotspots.map(function (p) {
+          return window.L.circleMarker([p.lat, p.lng], { radius: 10 + 30 * Math.sqrt(p.kg / maxKg), color: '#b3261e', fillColor: '#e8590c', fillOpacity: 0.45, weight: 2 })
+            .bindPopup(popupNode([p.name, kg(p.kg) + ' recovered', p.collections + ' collections · ' + p.pickers + ' pickers']));
+        })),
+        hubs: window.L.layerGroup(pts.hubs.map(function (p) {
+          return window.L.marker([p.lat, p.lng], { title: p.name }).bindPopup(popupNode([p.name, 'Hub (' + p.status + ')', kg(p.kg) + ' collected', kg(p.stock) + ' in stock']));
+        })),
+        recyclers: window.L.layerGroup(pts.recyclers.map(function (p) {
+          return window.L.circleMarker([p.lat, p.lng], { radius: 8, color: '#0b3d91', fillColor: '#2f6fdb', fillOpacity: 0.9, weight: 2 }).bindPopup(popupNode([p.name, 'Recycling company']));
+        }))
+      };
+      var all = [];
+      Object.keys(groups).forEach(function (k) { groups[k].addTo(map); pts[k].forEach(function (p) { all.push([p.lat, p.lng]); }); });
+      if (all.length) { map.fitBounds(all, { padding: [40, 40], maxZoom: 15 }); } else { map.setView(center, 12); }
+      document.querySelectorAll('[data-layer]').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+          var g = groups[cb.dataset.layer];
+          if (g) { cb.checked ? g.addTo(map) : map.removeLayer(g); }
+        });
+      });
+      return map;
+    };
+    mapBtn.addEventListener('click', function () {
+      if (!box.hidden) { box.hidden = true; label.textContent = 'Show map'; return; }
+      box.hidden = false;
+      label.textContent = 'Hide map';
+      withLeaflet(mapBtn.dataset.src, mapBtn.dataset.css, function () {
+        if (!built) { built = buildMap(); }
+        built.invalidateSize();
+      });
+    });
+  }
+
+  // Click-to-place: fills latitude/longitude inputs from a map click (hub form, neighbourhoods, recyclers)
+  var pickers = {};
+  document.querySelectorAll('[data-geo-pick]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var latIn = document.querySelector(btn.dataset.lat);
+      var lngIn = document.querySelector(btn.dataset.lng);
+      var host = document.querySelector(btn.dataset.map);
+      if (!latIn || !lngIn || !host) return;
+      host.hidden = false;
+      withLeaflet(btn.dataset.src, btn.dataset.css, function () {
+        var st = pickers[btn.dataset.map];
+        if (!st) {
+          var center = JSON.parse(host.dataset.center);
+          st = pickers[btn.dataset.map] = { map: window.L.map(host.querySelector('.geo-picker-map')).setView(center, 12), marker: null, lat: null, lng: null };
+          baseLayer(host).addTo(st.map);
+          st.map.on('click', function (e) {
+            st.lat.value = e.latlng.lat.toFixed(6);
+            st.lng.value = e.latlng.lng.toFixed(6);
+            if (st.marker) { st.marker.setLatLng(e.latlng); } else { st.marker = window.L.marker(e.latlng).addTo(st.map); }
+          });
+        }
+        st.lat = latIn;
+        st.lng = lngIn;
+        st.map.invalidateSize();
+        var la = parseFloat(latIn.value), lo = parseFloat(lngIn.value);
+        if (isFinite(la) && isFinite(lo)) {
+          if (st.marker) { st.marker.setLatLng([la, lo]); } else { st.marker = window.L.marker([la, lo]).addTo(st.map); }
+          st.map.setView([la, lo], 15);
+        } else if (st.marker) { st.map.removeLayer(st.marker); st.marker = null; }
+      });
+    });
+  });
+
   // Loading state on forms: prevents double submission
   document.querySelectorAll('form[data-loading]').forEach(function (form) {
     form.addEventListener('submit', function () {

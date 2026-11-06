@@ -126,6 +126,15 @@ Everything is **off by default** and falls back to the safe local behaviour. Key
 - **USSD** (`/ussd/<token>`, Africa's Talking format; set `integrations.ussd.enabled`): the picker is identified by the phone number the network reports. Menu: balance, last 3 collections, prices, request a payout. **There is no PIN**, so a payout request is capped (`payout_max_ugx`, default UGX 100,000), limited per day (3), made once per session, goes only to the registered phone, is audited, and still needs the normal approval by someone else.
 - **Not done in this phase:** collecting recycler invoice payments by prompting the recycler's phone (recycler payments are still recorded by staff and confirmed by a second person), and SMS for new marketplace offers. Migration `0021` adds `sms_outbox`, `webhook_log` and `users.sms_opt_out`.
 
+### Geographic and programme monitoring (Phase 10)
+
+- **Map and hotspots** (`/monitoring/map`, Super Administrator, Project Manager, Hub Manager for their own hubs): hubs, recycling companies and plastic recovery per neighbourhood (circle size = kg), with date and hub filters. The same figures are always in tables beside the map, which also list every place whose **location is not set**. **Individual pickers and individual collections are never placed on a map**: recovery is counted per neighbourhood (the picker's home neighbourhood) and exports contain no picker names, national IDs or phone numbers.
+- **Coordinates are entered by people, never guessed:** latitude/longitude fields (validated to lie inside Uganda; swapped values are caught) with a "Pick on map" click on the hub form, the neighbourhoods page and the recycler page. No coordinates are shipped for Walbiongo, Olailong or Kabedo Opong: enter real ones at `/neighbourhoods`. Changes to neighbourhood and recycler locations are audited.
+- **Maps** use Leaflet 1.9.4 bundled in `public/assets/vendor/leaflet` (BSD-2 licence). It, and the street background, are fetched **only after someone clicks "Show map"**. The background is OpenStreetMap's public tile server (`integrations.maps.tile_url` and `attribution` in `config/app.php`): the viewer's browser contacts it, it suits light use, and for heavy use you should switch to a tile provider you have an account with (put any key in `config/app.local.php` only).
+- **Programme progress** (`/monitoring/programme`, Super Administrator and Project Manager): live progress against the five targets and a month-by-month table (kg collected and sold, pickers earning, new pickers, hubs collecting, income earned and paid) over 6, 12 or 24 months. Only the Super Administrator can change targets (`targets.manage`); each change is audited with the old and new value. Months are East Africa Time. Bottle and CO2 estimates remain off unless conversion factors and a source are configured (Phase 8).
+- **Reports:** two new reports, *Geographic* (Hub Managers: own hubs only) and *Programme progress and monthly impact* (Super Administrator, Project Manager), with CSV, Excel and PDF downloads and the usual audit.
+- Migration `0022` adds the `monitoring.view` and `targets.manage` permissions and an index for the hotspot queries.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -142,6 +151,7 @@ Everything is **off by default** and falls back to the safe local behaviour. Key
 | `php tests/phase7_finance.php` | Run Phase 7 ledger, payout, payment, invoice, reconciliation and race tests |
 | `php tests/phase8_reports.php` | Run Phase 8 report-number, export-format, scoping, privacy, audit and performance tests |
 | `php tests/phase9_integrations.php` | Run Phase 9 SMS, MTN/Airtel, callback and USSD tests (starts a local fake provider server) |
+| `php tests/phase10_monitoring.php` | Run Phase 10 coordinate, map data, hotspot, programme target, scoping, privacy and export tests |
 | `php jobs.php send-sms` | Send queued text messages |
 | `php jobs.php expire-orders` | Expire purchase-order negotiations that were not answered in time |
 | `php jobs.php poll-payments` / `generate-invoices` | Settle "processing" payments / invoice completed orders that have none |
@@ -193,7 +203,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 7. **Financial management** ✅
 8. **Reports and analytics** ✅
 9. **External integrations** (SMS, USSD, MTN MoMo, Airtel Money) ✅ built and tested against fakes; live credentials and sandbox runs still needed
-10. Geographic and programme monitoring
+10. **Geographic and programme monitoring** ✅
 11. Testing and deployment
 
 PHP extensions `gd`, `zip` and `intl` are not enabled in this XAMPP install. They will be needed for Phase 8 exports.

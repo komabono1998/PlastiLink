@@ -20,9 +20,7 @@ final class HubService
             'name'             => ['Hub name', 'required|max:120'],
             'neighbourhood_id' => ['Neighbourhood', 'required|int'],
             'address_note'     => ['Address note', 'max:255'],
-            'latitude'         => ['Latitude', 'between:-90,90'],
-            'longitude'        => ['Longitude', 'between:-180,180'],
-            'status'           => ['Status', 'required|in:active,inactive'],
+            'status'         => ['Status', 'required|in:active,inactive'],
         ]);
         $name = trim((string) ($in['name'] ?? ''));
         if ($name !== '' && !isset($errors['name']) && Hub::nameTaken($name, $id)) {
@@ -31,10 +29,9 @@ final class HubService
         if (!isset($errors['neighbourhood_id']) && !array_key_exists((int) $in['neighbourhood_id'], Neighbourhood::options())) {
             $errors['neighbourhood_id'] = 'Choose a neighbourhood from the list.';
         }
-        $lat = trim((string) ($in['latitude'] ?? ''));
-        $lng = trim((string) ($in['longitude'] ?? ''));
-        if (($lat === '') !== ($lng === '') && !isset($errors['latitude']) && !isset($errors['longitude'])) {
-            $errors['latitude'] = 'Enter both latitude and longitude, or leave both empty.';
+        [$lat, $lng, $geoError] = \App\Helpers\Geo::parse((string) ($in['latitude'] ?? ''), (string) ($in['longitude'] ?? ''));
+        if ($geoError !== null) {
+            $errors['latitude'] = $geoError;
         }
         if ($errors) {
             return ['errors' => $errors];
@@ -43,7 +40,7 @@ final class HubService
         $data = [
             'name' => $name, 'neighbourhood_id' => (int) $in['neighbourhood_id'],
             'address_note' => trim((string) ($in['address_note'] ?? '')) ?: null,
-            'latitude' => $lat === '' ? null : round((float) $lat, 6), 'longitude' => $lng === '' ? null : round((float) $lng, 6),
+            'latitude' => $lat, 'longitude' => $lng,
             'status' => $in['status'],
         ];
         if ($id === null) {

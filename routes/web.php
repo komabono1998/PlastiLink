@@ -28,6 +28,7 @@ use App\Controllers\HubController;
 use App\Controllers\NeighbourhoodController;
 use App\Controllers\PickerController;
 use App\Controllers\RecyclerController;
+use App\Controllers\MonitoringController;
 use App\Controllers\RegistrationController;
 use App\Controllers\ReportController;
 use App\Controllers\WebhookController;
@@ -190,6 +191,11 @@ $router->get('/finance', [FinanceController::class, 'index'], [$auth, new Permis
 $router->get('/finance/reconciliation', [FinanceController::class, 'reconciliation'], [$auth, new PermissionMiddleware('payments.reconcile')]);
 $router->post('/finance/reconciliation', [FinanceController::class, 'reconcile'], [$auth, new PermissionMiddleware('payments.reconcile')]);
 
+// Geographic and programme monitoring
+$router->get('/monitoring/map', [MonitoringController::class, 'map'], [$auth, new PermissionMiddleware('monitoring.view')]);
+$router->get('/monitoring/programme', [MonitoringController::class, 'programme'], [$auth, new PermissionMiddleware('monitoring.view')]);
+$router->post('/monitoring/targets', [MonitoringController::class, 'targets'], [$auth, new PermissionMiddleware('targets.manage')]);
+
 // Provider callbacks and USSD: no session or CSRF; the secret token in the URL is the credential (see WebhookService)
 $router->post('/webhooks/mtn/{token}', [WebhookController::class, 'mtn']);
 $router->post('/webhooks/airtel/{token}', [WebhookController::class, 'airtel']);
@@ -207,6 +213,7 @@ $router->get('/recyclers', [RecyclerController::class, 'index'], $anyRecycler);
 $router->get('/recyclers/create', [RecyclerController::class, 'create'], [$auth, new PermissionMiddleware('recyclers.manage')]);
 $router->post('/recyclers', [RecyclerController::class, 'store'], [$auth, new PermissionMiddleware('recyclers.manage')]);
 $router->get('/recyclers/{id:\d+}', [RecyclerController::class, 'show'], $anyRecycler);
+$router->post('/recyclers/{id:\d+}/location', [RecyclerController::class, 'location'], [$auth, new PermissionMiddleware('recyclers.manage')]);
 $router->post('/recyclers/{id:\d+}/decision', [RecyclerController::class, 'decide'], [$auth, new PermissionMiddleware('recyclers.approve')]);
 
 // Approval queue (pickers for hub managers / admins, recyclers for admins and project managers)

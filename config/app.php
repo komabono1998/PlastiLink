@@ -49,6 +49,14 @@ return [
                 'base_url'  => '',           // optional override (tests)
             ],
         ],
+        'maps' => [
+            // Street background for the maps. Tiles are requested by the viewer's browser only after "Show map" is clicked.
+            // OpenStreetMap's public tile server suits light use; for heavy use switch to a provider you have an account with
+            // (put its URL here, including any key, in config/app.local.php only).
+            'tile_url'    => 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            'attribution' => '&copy; OpenStreetMap contributors',
+            'center'      => [2.7746, 32.2990],   // where the map opens when nothing has coordinates yet (Gulu); NOT stored data
+        ],
         'ussd' => [
             'enabled'            => false,
             'payout_max_ugx'     => 100000,  // largest payout a picker can request by USSD (it still needs approval)

@@ -63,6 +63,11 @@ final class Recycler
         return (int) $pdo->lastInsertId();
     }
 
+    public static function setLocation(int $id, ?float $lat, ?float $lng): void
+    {
+        Database::connection()->prepare('UPDATE recyclers SET latitude = ?, longitude = ? WHERE id = ?')->execute([$lat, $lng, $id]);
+    }
+
     public static function decide(int $id, string $status, int $byUserId, ?string $reason): void
     {
         Database::connection()->prepare(

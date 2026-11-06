@@ -8,6 +8,8 @@ use App\Models\Hub;
 use App\Models\Neighbourhood;
 use App\Services\Reports\CollectionsReport;
 use App\Services\Reports\FinancialReport;
+use App\Services\Reports\GeographicReport;
+use App\Services\Reports\ProgrammeReport;
 use App\Services\Reports\HubPerformanceReport;
 use App\Services\Reports\ImpactReport;
 use App\Services\Reports\InventoryReport;
@@ -33,6 +35,8 @@ final class ReportService
         'financial'   => FinancialReport::class,
         'payments'    => PaymentsReport::class,
         'impact'      => ImpactReport::class,
+        'geographic'  => GeographicReport::class,
+        'programme'   => ProgrammeReport::class,
     ];
 
     /** @return array<string,class-string<Report>> reports this user may open */

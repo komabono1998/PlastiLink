@@ -203,8 +203,8 @@ check('A period with no data gives zeros and empty tables (no error)', (int) $em
 
 // ---------------------------------------------------------------- who may open what
 $keysOf = fn(array $u) => array_keys(ReportService::allowedFor($u));
-check('Super Administrator and Project Manager see all 8 reports', count($keysOf($sa)) === 8 && count($keysOf($pm)) === 8);
-check('Hub Manager sees collections, pickers, hubs and inventory only', $keysOf($hmA) === ['collections', 'pickers', 'hubs', 'inventory']);
+check('Super Administrator and Project Manager see all 10 reports', count($keysOf($sa)) === 10 && count($keysOf($pm)) === 10);
+check('Hub Manager sees collections, pickers, hubs, inventory and geographic only', $keysOf($hmA) === ['collections', 'pickers', 'hubs', 'inventory', 'geographic']);
 check('Hub Operator sees no reports', $keysOf($hoA) === []);
 
 $hm = ReportService::run(CollectionsReport::class, ['hub_id' => (string) $hubB], $hmA);
@@ -233,15 +233,15 @@ check('Hub Operator is forbidden (403) from /reports and an export', req($cl['ho
 check('Waste picker is forbidden (403)', req($cl['pkA'], 'GET', '/reports')['status'] === 403 && req($cl['pkA'], 'GET', '/reports/collections')['status'] === 403);
 
 $idx = req($cl['sa'], 'GET', '/reports');
-check('Index shows all 8 reports to the Super Administrator', $idx['status'] === 200 && substr_count($idx['body'], 'href="' . $basePath . '/reports/') >= 8);
+check('Index shows all 10 reports to the Super Administrator', $idx['status'] === 200 && substr_count($idx['body'], 'href="' . $basePath . '/reports/') >= 10);
 $idxHm = req($cl['hma'], 'GET', '/reports');
-check('Hub Manager index lists 4 reports and not Financial', $idxHm['status'] === 200 && !str_contains($idxHm['body'], '/reports/financial') && str_contains($idxHm['body'], '/reports/collections'));
+check('Hub Manager index lists 5 reports and not Financial', $idxHm['status'] === 200 && !str_contains($idxHm['body'], '/reports/financial') && str_contains($idxHm['body'], '/reports/collections'));
 foreach (['financial', 'payments', 'impact', 'recyclers'] as $k) {
     check("Hub Manager gets 404 for the $k report and its export", req($cl['hma'], 'GET', "/reports/$k")['status'] === 404 && req($cl['hma'], 'GET', "/reports/$k/export/csv")['status'] === 404);
 }
 check('Unknown report and unknown format give 404', req($cl['sa'], 'GET', '/reports/nothing')['status'] === 404 && req($cl['sa'], 'GET', '/reports/collections/export/exe')['status'] === 404);
 
-foreach (['collections', 'pickers', 'hubs', 'inventory', 'recyclers', 'financial', 'payments', 'impact'] as $k) {
+foreach (['collections', 'pickers', 'hubs', 'inventory', 'recyclers', 'financial', 'payments', 'impact', 'geographic', 'programme'] as $k) {
     $r = req($cl['sa'], 'GET', "/reports/$k");
     check("Screen /reports/$k renders for the Super Administrator", $r['status'] === 200 && str_contains($r['body'], 'Generated') || ($r['status'] === 200 && str_contains($r['body'], 'generated')), 'status ' . $r['status']);
 }
@@ -297,7 +297,7 @@ check('Project Manager can export a finance report', $ho['status'] === 200 && st
 // ---------------------------------------------------------------- privacy
 $leak = false;
 foreach (['sa', 'pm'] as $who) {
-    foreach (['collections', 'pickers', 'hubs', 'inventory', 'recyclers', 'financial', 'payments', 'impact'] as $k) {
+    foreach (['collections', 'pickers', 'hubs', 'inventory', 'recyclers', 'financial', 'payments', 'impact', 'geographic', 'programme'] as $k) {
         foreach (['csv', 'xlsx', 'pdf'] as $fmt) {
             $body = req($cl[$who], 'GET', "/reports/$k/export/$fmt?from=" . date('Y-m-d', strtotime('-400 days')))['body'];
             $hay = $fmt === 'xlsx' ? implode('', $readZip($body) ?? [$body]) : $body;
@@ -308,7 +308,7 @@ foreach (['sa', 'pm'] as $who) {
         }
     }
 }
-check('No export (24 combinations x 2 roles) contains a national ID or phone number', !$leak);
+check('No export (30 combinations x 2 roles) contains a national ID or phone number', !$leak);
 
 // ---------------------------------------------------------------- performance with a few thousand rows
 $pdo->beginTransaction();

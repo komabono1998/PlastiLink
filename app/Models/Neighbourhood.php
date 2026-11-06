@@ -49,6 +49,11 @@ final class Neighbourhood
         Database::connection()->prepare('UPDATE neighbourhoods SET name = ? WHERE id = ?')->execute([$name, $id]);
     }
 
+    public static function setLocation(int $id, ?float $lat, ?float $lng): void
+    {
+        Database::connection()->prepare('UPDATE neighbourhoods SET latitude = ?, longitude = ? WHERE id = ?')->execute([$lat, $lng, $id]);
+    }
+
     public static function setActive(int $id, bool $active): void
     {
         Database::connection()->prepare('UPDATE neighbourhoods SET is_active = ? WHERE id = ?')->execute([$active ? 1 : 0, $id]);

@@ -13,6 +13,8 @@ $v = static fn(string $k) => $editing ? (string) ($hub[$k] ?? '') : null;
       <div class="col-6"><?= component('field', ['name' => 'latitude', 'label' => 'Latitude', 'value' => $v('latitude'), 'attrs' => ['inputmode' => 'decimal'], 'hint' => 'Optional, for maps']) ?></div>
       <div class="col-6"><?= component('field', ['name' => 'longitude', 'label' => 'Longitude', 'value' => $v('longitude'), 'attrs' => ['inputmode' => 'decimal']]) ?></div>
     </div>
+    <p class="mb-3"><button class="btn btn-sm btn-outline-secondary" type="button" data-geo-pick data-lat="#f-latitude" data-lng="#f-longitude" data-map="#geo-map" data-src="<?= e(asset('vendor/leaflet/leaflet.js')) ?>" data-css="<?= e(asset('vendor/leaflet/leaflet.css')) ?>"><i class="bi bi-geo-alt"></i> Pick on map</button></p>
+    <?= component('geo-picker', ['id' => 'geo-map']) ?>
     <?= component('field', ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'required' => true,
         'options' => ['active' => 'Active', 'inactive' => 'Inactive'], 'value' => $editing ? $hub['status'] : 'active']) ?>
     <button class="btn btn-primary" type="submit"><?= $editing ? 'Save changes' : 'Register hub' ?></button>

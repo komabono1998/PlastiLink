@@ -1,5 +1,5 @@
 <?php /** @var array<string,class-string> $reports */
-$icons = ['collections' => 'box-seam', 'pickers' => 'person-badge', 'hubs' => 'shop', 'inventory' => 'boxes', 'recyclers' => 'building', 'financial' => 'cash-coin', 'payments' => 'credit-card', 'impact' => 'tree'];
+$icons = ['collections' => 'box-seam', 'pickers' => 'person-badge', 'hubs' => 'shop', 'inventory' => 'boxes', 'recyclers' => 'building', 'financial' => 'cash-coin', 'payments' => 'credit-card', 'impact' => 'tree', 'geographic' => 'geo-alt', 'programme' => 'bullseye'];
 ?>
 <p class="text-muted">Every report is built from the recorded data and can be downloaded as CSV, Excel or PDF. Downloads are logged.</p>
 <?php if (!$reports): ?>

@@ -52,6 +52,23 @@ final class RecyclerController extends Controller
         ]);
     }
 
+    public function location(Request $request, string $id): string
+    {
+        $r = Recycler::find((int) $id);
+        if (!$r) {
+            return $this->notFound($request);
+        }
+        [$lat, $lng, $err] = \App\Helpers\Geo::parse((string) $request->input('latitude', ''), (string) $request->input('longitude', ''));
+        if ($err !== null) {
+            Session::flash('danger', $err);
+            return redirect('/recyclers/' . (int) $id);
+        }
+        Recycler::setLocation((int) $id, $lat, $lng);
+        \App\Models\AuditLog::write('recycler.location_set', (int) AuthService::user()['id'], 'recycler', (int) $id, ['latitude' => $lat, 'longitude' => $lng]);
+        Session::flash('success', $lat === null ? 'Location cleared.' : 'Location saved.');
+        return redirect('/recyclers/' . (int) $id);
+    }
+
     public function decide(Request $request, string $id): string
     {
         $r = RecyclerService::decide((int) $id, (string) $request->input('decision', ''), $request->input('reason'), AuthService::user());
