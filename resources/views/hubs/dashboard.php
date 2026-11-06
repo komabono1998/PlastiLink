@@ -1,7 +1,7 @@
-<?php /** @var array $myHubs @var int $pickersTotal @var int $pickersPending @var array $today @var array $recent @var array $stock @var int $transfersWaiting @var int $adjustmentsPending @var array $orderStats */ ?>
+<?php /** @var array $myHubs @var int $pickersTotal @var int $pickersPending @var array $today @var array $recent @var array $stock @var int $transfersWaiting @var int $adjustmentsPending @var array $orderStats @var int $payoutsToPay @var int $payoutsToApprove */ ?>
 <?= component('welcome', [
     'user' => auth_user(), 'blurb' => 'Hub operations',
-    'coming' => ['Invoices and payments (Phase 7)'],
+    'coming' => ['Reports and analytics (Phase 8)'],
 ]) ?>
 
 <div class="d-flex flex-wrap gap-2 mt-1 mb-3">
@@ -21,6 +21,13 @@
   <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
     <span><i class="bi bi-receipt-cutoff"></i> <strong><?= e($orderStats['awaiting']) ?></strong> purchase request<?= $orderStats['awaiting'] === 1 ? '' : 's' ?> waiting for your response · <strong><?= e($orderStats['active']) ?></strong> order<?= $orderStats['active'] === 1 ? '' : 's' ?> to deliver.</span>
     <a class="btn btn-sm btn-primary" href="<?= e(url('/orders')) ?>">Open orders</a>
+  </div>
+<?php endif; ?>
+
+<?php if (can('payments.view') && ($payoutsToPay > 0 || $payoutsToApprove > 0)): ?>
+  <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+    <span><i class="bi bi-cash-stack"></i> <strong><?= e($payoutsToApprove) ?></strong> payout request<?= $payoutsToApprove === 1 ? '' : 's' ?> waiting for approval · <strong><?= e($payoutsToPay) ?></strong> approved payout<?= $payoutsToPay === 1 ? '' : 's' ?> to pay.</span>
+    <a class="btn btn-sm btn-primary" href="<?= e(url('/payouts')) ?>">Open payouts</a>
   </div>
 <?php endif; ?>
 

@@ -4,7 +4,7 @@
 
 **Stack:** PHP 8.2+ (custom MVC, no framework) · PDO · MySQL/MariaDB · Bootstrap 5 · Bootstrap Icons · Chart.js. No Composer or Node needed.
 
-**Status:** Phases 1 to 6 complete (foundation, authentication and RBAC, administration and registrations, collection hub operations, inventory, recycler marketplace). See "Roadmap".
+**Status:** Phases 1 to 7 complete (foundation, authentication and RBAC, administration and registrations, collection hub operations, inventory, recycler marketplace, financial management). See "Roadmap".
 
 ## Local setup (Windows + XAMPP)
 
@@ -92,6 +92,20 @@ Passwords are random and printed once in your terminal; they are never stored in
 - Not in this phase: editing a recycler's company profile and material requirements, and notifications (SMS/email arrive in Phase 9; for now dashboards show what is waiting).
 - `php seed.php demo-data` also adds a DEMO order being delivered (one load waiting for the recycler to confirm) and a DEMO request waiting for the hub.
 
+### Financial management (Phase 7)
+
+- **Money ledger, not stored balances:** every movement of money is an append-only row in `financial_ledger` (whole UGX, signed from the account's point of view). Balances are always the sum of entries. `App\Services\LedgerService` is the only writer; wrong signs, wrong account types and double posting of the same source event are refused. `/finance` shows a **ledger check** that compares the ledger with the records it is built from (approved collections, payments, invoices).
+- **Picker earnings:** approving a collection credits the picker; reversing it takes the credit back. Screens: `/earnings` (picker), `/earnings/{pickerId}` (staff for their hubs), printable income statement at `/earnings/statement`. **If a collection is reversed after the picker was already paid, the balance goes negative** (with a warning) and is recovered from future earnings; no cash is clawed back.
+- **Payouts:** request (the picker, or a Hub Manager/Super Administrator for them; at most the *available* amount = balance minus money already in requests; min UGX 1,000, max UGX 5,000,000, set in `config/app.php` under `finance`) → **approval by a different person** (Project Manager or Super Administrator; never the requester) → payment. Mobile money goes only to the picker's registered phone; cash is paid at the hub.
+- **Payments:** statuses **pending, processing, successful, failed, reversed** (`PaymentService::TRANSITIONS`). Executing a payment goes through a `PaymentProvider` (`app/Services/Payments`): `ManualProvider` (staff record the real mobile-money transaction ID or a cash receipt note; **default**) and `MockProvider` (development simulator; refuses to run in production). Set `finance.provider` in `config/app.php`. MTN MoMo and Airtel Money providers plug into the same interface in Phase 9. Every attempt is kept in `payment_attempts`; a failed payment can be retried; a provider reference can only back one payment; each payout has an idempotency key; processing re-checks the balance under a row lock. A reversal needs `payments.reverse` and a reason and posts an opposite ledger entry.
+- **Recycler invoices:** issued **automatically** when an order completes: *confirmed received kg × agreed price*, whole UGX (orders closed short are billed only for what arrived; if a load is still unconfirmed, the invoice waits for the confirmation). One invoice per order (unique key), 14-day payment terms (`finance.invoice_terms_days`). Screens: `/invoices`, `/statement` (recycler account statement). A Project Manager or Super Administrator can void an *unpaid* invoice with a reason.
+- **Recycler payments:** recorded against an invoice by one person (`invoices.manage`) and **confirmed by a different person** (`payments.approve`) before they count. Partial payments are allowed; recording is capped at what is still open (pending receipts included). Reversible with a reason.
+- **Reconciliation** (`/finance/reconciliation`): tick successful payments off against the mobile-money or bank statement with a statement reference. Unreconciled items stay visible, with reconciled/unreconciled totals.
+- **Who sees what:** pickers their own money; recyclers their own invoices and payments; hub staff the pickers and invoices of their hubs; Project Managers and Super Administrators everything. Phone numbers are masked except for Super Administrators; statements and receipts never include phone numbers or national IDs.
+- **Jobs:** `php jobs.php poll-payments` (settles payments left "processing" by a provider) and `php jobs.php generate-invoices` (safety net). Schedule them with cron / Task Scheduler.
+- **Back-fill:** migration `0019` credits pickers for collections approved before Phase 7 (safe to re-run).
+- `php seed.php demo-data` now also leaves: a DEMO order that was delivered, closed short and invoiced (UGX 5,200); a DEMO cash payout taken through request, approval and payment; a DEMO mobile-money payout waiting for approval; and a DEMO recycler payment waiting for a second person to confirm.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -105,7 +119,9 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php tests/phase4_collections.php` | Run Phase 4 price, collection, approval, receipt and scoping tests |
 | `php tests/phase5_inventory.php` | Run Phase 5 ledger, transfer, dispatch, adjustment, reservation and race tests |
 | `php tests/phase6_marketplace.php` | Run Phase 6 offer, negotiation, reservation, fulfilment, scoping and race tests |
+| `php tests/phase7_finance.php` | Run Phase 7 ledger, payout, payment, invoice, reconciliation and race tests |
 | `php jobs.php expire-orders` | Expire purchase-order negotiations that were not answered in time |
+| `php jobs.php poll-payments` / `generate-invoices` | Settle "processing" payments / invoice completed orders that have none |
 | `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price, collections, stock movements and orders |
 
 `/styleguide` shows the shared design system. It is only registered when `app.env` is not `production`.
@@ -151,7 +167,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 4. **Collection hub operations** ✅
 5. **Inventory** ✅
 6. **Recycler marketplace** ✅
-7. Financial management
+7. **Financial management** ✅
 8. Reports and analytics
 9. External integrations (SMS, USSD, MTN MoMo, Airtel Money; need provider credentials)
 10. Geographic and programme monitoring

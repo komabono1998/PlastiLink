@@ -16,6 +16,12 @@ final class StockInput
         return in_array($permission, Role::permissionSlugs((int) $actor['role_id']), true);
     }
 
+    /** Staff who handle money screens (not pickers, recyclers or hub operators). */
+    public static function isFinanceStaff(array $actor): bool
+    {
+        return in_array($actor['role_slug'], ['super_admin', 'project_manager', 'hub_manager'], true);
+    }
+
     public static function token(array $in): ?string
     {
         $t = (string) ($in['token'] ?? '');

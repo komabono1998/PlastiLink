@@ -10,6 +10,11 @@ use App\Controllers\AuthController;
 use App\Controllers\AdjustmentController;
 use App\Controllers\CollectionController;
 use App\Controllers\DispatchController;
+use App\Controllers\EarningsController;
+use App\Controllers\FinanceController;
+use App\Controllers\InvoiceController;
+use App\Controllers\PaymentController;
+use App\Controllers\PayoutController;
 use App\Controllers\InventoryController;
 use App\Controllers\MarketplaceController;
 use App\Controllers\OrderController;
@@ -151,6 +156,37 @@ foreach (['counter' => 'counter', 'accept' => 'accept', 'end' => 'end', 'schedul
     $router->post('/orders/{id:\d+}/' . $path, [OrderController::class, $method], $anyOrder);
 }
 $router->post('/orders/{id:\d+}/receive/{did:\d+}', [OrderController::class, 'receive'], $anyOrder);
+
+// Money: earnings, payouts, payments, invoices, reconciliation (services decide who may see which record)
+$viewPay = [$auth, new PermissionMiddleware('payments.view')];
+$router->get('/earnings', [EarningsController::class, 'mine'], $viewPay);
+$router->get('/earnings/statement', [EarningsController::class, 'statement'], $viewPay);
+$router->get('/earnings/{id:\d+}', [EarningsController::class, 'show'], $viewPay);
+$router->get('/earnings/{id:\d+}/statement', [EarningsController::class, 'staffStatement'], $viewPay);
+$router->get('/payouts', [PayoutController::class, 'index'], $viewPay);
+$router->post('/payouts', [PayoutController::class, 'store'], [$auth, new AnyPermissionMiddleware('payouts.request', 'payouts.request_own')]);
+$router->get('/payouts/{id:\d+}', [PayoutController::class, 'show'], $viewPay);
+$router->post('/payouts/{id:\d+}/decision', [PayoutController::class, 'decision'], [$auth, new PermissionMiddleware('payments.approve')]);
+$router->post('/payouts/{id:\d+}/cancel', [PayoutController::class, 'cancel'], $viewPay);
+
+$anyMoney = [$auth, new AnyPermissionMiddleware('payments.view', 'invoices.view')];
+$router->get('/payments', [PaymentController::class, 'index'], $anyMoney);
+$router->get('/payments/{id:\d+}', [PaymentController::class, 'show'], $anyMoney);
+$router->post('/payments/{id:\d+}/process', [PaymentController::class, 'process'], [$auth, new PermissionMiddleware('payments.process')]);
+$router->post('/payments/{id:\d+}/fail', [PaymentController::class, 'fail'], [$auth, new PermissionMiddleware('payments.process')]);
+$router->post('/payments/{id:\d+}/reverse', [PaymentController::class, 'reverse'], [$auth, new PermissionMiddleware('payments.reverse')]);
+$router->post('/payments/{id:\d+}/receipt-decision', [InvoiceController::class, 'decideReceipt'], [$auth, new PermissionMiddleware('payments.approve')]);
+
+$viewInv = [$auth, new PermissionMiddleware('invoices.view')];
+$router->get('/invoices', [InvoiceController::class, 'index'], $viewInv);
+$router->get('/invoices/{id:\d+}', [InvoiceController::class, 'show'], $viewInv);
+$router->post('/invoices/{id:\d+}/payment', [InvoiceController::class, 'record'], [$auth, new PermissionMiddleware('invoices.manage')]);
+$router->post('/invoices/{id:\d+}/void', [InvoiceController::class, 'void'], [$auth, new PermissionMiddleware('invoices.manage')]);
+$router->get('/statement', [InvoiceController::class, 'statement'], $viewInv);
+
+$router->get('/finance', [FinanceController::class, 'index'], [$auth, new PermissionMiddleware('finance.view')]);
+$router->get('/finance/reconciliation', [FinanceController::class, 'reconciliation'], [$auth, new PermissionMiddleware('payments.reconcile')]);
+$router->post('/finance/reconciliation', [FinanceController::class, 'reconcile'], [$auth, new PermissionMiddleware('payments.reconcile')]);
 
 // Recyclers
 $anyRecycler = [$auth, new AnyPermissionMiddleware('recyclers.approve', 'recyclers.manage')];

@@ -34,7 +34,7 @@ final class PayoutService
         if ($actor['role_slug'] === 'waste_picker') {
             return Picker::findByUserId((int) $actor['id']);
         }
-        if (!StockInput::can($actor, 'payments.view') || $pickerId === null) {
+        if (!StockInput::isFinanceStaff($actor) || !StockInput::can($actor, 'payments.view') || $pickerId === null) {
             return null;
         }
         return PickerService::findAccessible($pickerId, $actor);
@@ -49,7 +49,7 @@ final class PayoutService
         if ($actor['role_slug'] === 'waste_picker') {
             return (int) $q['picker_user_id'] === (int) $actor['id'] ? $q : null;
         }
-        return StockInput::can($actor, 'payments.view') && HubScope::allows(HubScope::forUser($actor), $q['preferred_hub_id'] !== null ? (int) $q['preferred_hub_id'] : null) ? $q : null;
+        return StockInput::isFinanceStaff($actor) && StockInput::can($actor, 'payments.view') && HubScope::allows(HubScope::forUser($actor), $q['preferred_hub_id'] !== null ? (int) $q['preferred_hub_id'] : null) ? $q : null;
     }
 
     /** @return array{errors:array<string,string>, error:?string, id?:int, duplicate?:bool} */

@@ -1,5 +1,5 @@
-<?php /** @var array $stats @var array $recent @var int $available */ ?>
-<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Recycler marketplace', 'coming' => ['Invoices and payments (Phase 7)', 'Purchase reports (Phase 8)']]) ?>
+<?php /** @var array $stats @var array $recent @var int $available @var int $owing @var int $overdueInvoices */ ?>
+<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Recycler marketplace', 'coming' => ['Purchase reports (Phase 8)']]) ?>
 
 <div class="d-flex flex-wrap gap-2 mt-1 mb-3">
   <a class="btn btn-primary btn-lg" href="<?= e(url('/marketplace')) ?>"><i class="bi bi-shop-window"></i> Browse available plastic<?= $available ? ' (' . e($available) . ')' : '' ?></a>
@@ -11,6 +11,11 @@
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'chat-dots', 'value' => (string) $stats['negotiating'], 'label' => 'Negotiations open']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'truck', 'value' => (string) $stats['active'], 'label' => 'Orders being delivered']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'box-seam', 'value' => format_kg($stats['received_kg']), 'label' => 'Confirmed received', 'hint' => format_ugx($stats['received_value']) . ' at agreed prices']) ?></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6"><a class="text-decoration-none text-reset" href="<?= e(url('/invoices')) ?>"><?= component('stat-card', ['icon' => 'file-earmark-text', 'value' => format_ugx($owing), 'label' => 'You owe PlastiLink', 'hint' => 'See your invoices']) ?></a></div>
+  <div class="col-6"><a class="text-decoration-none text-reset" href="<?= e(url('/invoices?status=overdue')) ?>"><?= component('stat-card', ['icon' => 'alarm', 'value' => (string) $overdueInvoices, 'label' => 'Overdue invoices']) ?></a></div>
 </div>
 
 <div class="card"><div class="card-body pb-0 d-flex justify-content-between"><h2 class="h6">Latest orders</h2><a href="<?= e(url('/orders')) ?>">See all</a></div>

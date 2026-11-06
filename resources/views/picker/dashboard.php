@@ -1,9 +1,9 @@
-<?php /** @var array $summary @var array $recent */ ?>
-<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Your collections and receipts', 'coming' => ['Mobile money payments and income statements (Phase 7)']]) ?>
+<?php /** @var array $summary @var array $recent @var array $pos */ ?>
+<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Your collections, earnings and receipts', 'coming' => []]) ?>
 
-<div class="row g-3 mt-1 mb-4">
+<div class="row g-3 mt-1 mb-3">
   <div class="col-6"><?= component('stat-card', ['icon' => 'box-seam', 'value' => format_kg($summary['kg']), 'label' => 'Approved plastic delivered']) ?></div>
-  <div class="col-6"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($summary['value']), 'label' => 'Value of approved collections', 'hint' => 'Not yet paid']) ?></div>
+  <div class="col-6"><a class="text-decoration-none text-reset" href="<?= e(url('/earnings')) ?>"><?= component('stat-card', ['icon' => 'wallet2', 'value' => format_ugx($pos['available']), 'label' => 'Available to pay out', 'hint' => $pos['held'] > 0 ? format_ugx($pos['held']) . ' in requests' : 'Tap to request a payout']) ?></a></div>
 </div>
 
 <div class="card"><div class="card-body pb-0 d-flex justify-content-between"><h2 class="h6">Latest collections</h2>

@@ -133,9 +133,34 @@ if ($command === 'demo-data') {
             $rec::counter((int) $o1['id'], ['quantity_kg' => '10', 'price_per_kg_ugx' => '1300', 'note' => 'DEMO counter-offer'], $mgr);
             $rec::accept((int) $o1['id'], $recActor);
             $rec::dispatch((int) $o1['id'], ['token' => md5('demo-order-1-load'), 'quantity_kg' => '4', 'vehicle' => 'DEMO UAA 001B', 'driver' => 'DEMO Driver'], $mgr);
+            // The recycler confirms the 4 kg; the hub closes the rest short. The completed order is invoiced automatically (4 kg x 1,300).
+            foreach (App\Models\StockDispatch::forOrder((int) $o1['id']) as $ld) {
+                $rec::receive((int) $o1['id'], (int) $ld['id'], ['received_kg' => '4'], $recActor);
+            }
+            $rec::closeShort((int) $o1['id'], 'DEMO: the rest will not be delivered', $mgr);
         }
         $rec::create(['token' => md5('demo-order-2'), 'hub_id' => $hubIds[0], 'plastic_category_id' => $petId, 'quantity_kg' => '5',
             'price_per_kg_ugx' => '1100', 'note' => 'DEMO offer waiting for the hub'], $recActor);
+    }
+    // Demo money: a cash payout that went through request -> approval -> payment, a mobile money payout waiting for approval,
+    // and a recycler payment waiting for a second person to confirm it.
+    $pmId = $uid('email', 'demo.projectmanager@example.test');
+    $demoPicker = $pdo->query("SELECT p.id FROM pickers p JOIN users u ON u.id = p.user_id WHERE u.phone_e164 = '+256700000001'")->fetchColumn();
+    if ($pmId && $mgrId && $demoPicker && !empty($mgr)) {
+        $pm = App\Models\User::findById($pmId);
+        $r1 = App\Services\PayoutService::request(['token' => md5('demo-payout-1'), 'picker_id' => $demoPicker, 'amount_ugx' => '5000', 'method' => 'cash'], $mgr);
+        if (!empty($r1['id']) && empty($r1['duplicate'])) {
+            App\Services\PayoutService::decide((int) $r1['id'], 'approve', null, $pm);
+            $payId = (int) $pdo->query("SELECT id FROM payments WHERE request_id = {$r1['id']}")->fetchColumn();
+            App\Services\PaymentService::process($payId, ['receipt_note' => 'DEMO cash paid at hub, witnessed by hub operator'], $mgr);
+        }
+        App\Services\PayoutService::request(['token' => md5('demo-payout-2'), 'picker_id' => $demoPicker, 'amount_ugx' => '3000', 'method' => 'mobile_money'], $mgr);
+    }
+    App\Services\InvoiceService::generateMissing();
+    $demoInvoice = (int) $pdo->query('SELECT id FROM invoices ORDER BY id LIMIT 1')->fetchColumn();
+    if ($demoInvoice && $pmId && !$pdo->query("SELECT COUNT(*) FROM payments WHERE direction = 'in' AND invoice_id = $demoInvoice")->fetchColumn()) {
+        App\Services\InvoiceService::recordReceipt($demoInvoice, ['token' => md5('demo-receipt-1'), 'amount_ugx' => '2000', 'method' => 'mobile_money',
+            'provider_reference' => 'DEMO-MM-0001', 'received_on' => App\Helpers\Dates::todayYmd()], App\Models\User::findById($pmId));
     }
     echo "Demo hubs, pickers, recyclers, a DEMO price and collections are in place (all labelled DEMO). Run 'demo-users' first for sign-in accounts.\n";
     exit(0);

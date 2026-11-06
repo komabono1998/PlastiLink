@@ -69,6 +69,12 @@ body { background: var(--pl-bg); color: var(--pl-charcoal); }
 .stat-card .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
 .stat-card .stat-label { color: var(--pl-muted); font-size: .875rem; }
 
+@media (max-width: 420px) {
+  .stat-card .stat-value { font-size: 1.3rem; }
+  .stat-card .card-body { gap: .6rem !important; padding: .8rem; }
+  .stat-icon { width: 40px; height: 40px; font-size: 1.15rem; }
+}
+
 /* Forms */
 .form-label { font-weight: 600; }
 .form-control, .form-select { min-height: 44px; border-radius: .6rem; border-color: var(--pl-border); }

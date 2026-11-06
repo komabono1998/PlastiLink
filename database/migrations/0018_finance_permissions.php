@@ -19,7 +19,7 @@ return [
         }
 
         $grants = [
-            'super_admin'     => ['payouts.request', 'payments.process', 'payments.reverse', 'payments.reconcile', 'invoices.view', 'invoices.manage', 'finance.view'],
+            'super_admin'     => ['payouts.request', 'payouts.request_own', 'payments.process', 'payments.reverse', 'payments.reconcile', 'invoices.view', 'invoices.manage', 'finance.view'],
             'project_manager' => ['payments.approve', 'payments.process', 'payments.reverse', 'payments.reconcile', 'invoices.view', 'invoices.manage', 'finance.view'],
             'hub_manager'     => ['payouts.request', 'payments.process', 'payments.view', 'invoices.view'],
             'waste_picker'    => ['payouts.request_own'],

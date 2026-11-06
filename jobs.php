@@ -4,7 +4,9 @@ declare(strict_types=1);
 /**
  * PlastiLink scheduled jobs (CLI only). Run from a cron task / Windows Task Scheduler.
  *
- *   php jobs.php expire-orders     Expire purchase-order negotiations that were not answered in time
+ *   php jobs.php expire-orders       Expire purchase-order negotiations that were not answered in time
+ *   php jobs.php poll-payments       Ask the payment provider about payments left "processing"
+ *   php jobs.php generate-invoices   Invoice completed orders that have none yet (safety net)
  *
  * (Expiry is also applied lazily whenever an order is opened, so this job is a safety net.)
  */
@@ -21,7 +23,15 @@ switch ($argv[1] ?? '') {
         $n = App\Models\PurchaseOrder::expireStale();
         echo "Expired $n negotiation(s).\n";
         break;
+    case 'poll-payments':
+        $n = App\Services\PaymentService::pollProcessing();
+        echo "Updated $n processing payment(s).\n";
+        break;
+    case 'generate-invoices':
+        $n = App\Services\InvoiceService::generateMissing();
+        echo "Issued $n invoice(s).\n";
+        break;
     default:
-        fwrite(STDERR, "Usage: php jobs.php expire-orders\n");
+        fwrite(STDERR, "Usage: php jobs.php expire-orders | poll-payments | generate-invoices\n");
         exit(1);
 }

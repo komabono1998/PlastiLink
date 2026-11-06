@@ -45,6 +45,13 @@ $cleanup = function () use ($pdo): void {
     $prc = $ids("SELECT id FROM price_lists WHERE hub_id IN ($hub) OR note LIKE 'P6TEST%'");
     $pdo->exec("DELETE FROM audit_logs WHERE user_id IN ($usr) OR (entity_type = 'order' AND entity_id IN ($ord)) OR (entity_type = 'dispatch' AND entity_id IN ($dsp))
                 OR (entity_type = 'collection' AND entity_id IN ($col)) OR (entity_type = 'price' AND entity_id IN ($prc)) OR (entity_type = 'user' AND entity_id IN ($usr))");
+    $inv = $ids("SELECT id FROM invoices WHERE order_id IN ($ord)");
+    $pay = $ids("SELECT id FROM payments WHERE invoice_id IN ($inv)");
+    $pdo->exec("DELETE FROM audit_logs WHERE (entity_type = 'invoice' AND entity_id IN ($inv)) OR (entity_type = 'payment' AND entity_id IN ($pay))");
+    $pdo->exec("DELETE FROM financial_ledger WHERE (source_type = 'invoice' AND source_id IN ($inv)) OR (source_type = 'payment' AND source_id IN ($pay)) OR (source_type = 'collection' AND source_id IN ($col))");
+    $pdo->exec("DELETE FROM payment_attempts WHERE payment_id IN ($pay)");
+    $pdo->exec("DELETE FROM payments WHERE id IN ($pay)");
+    $pdo->exec("DELETE FROM invoices WHERE id IN ($inv)");
     $pdo->exec("DELETE FROM stock_movements WHERE hub_id IN ($hub)");
     $pdo->exec("DELETE FROM stock_dispatches WHERE id IN ($dsp)");
     $pdo->exec("DELETE FROM order_offers WHERE order_id IN ($ord)");

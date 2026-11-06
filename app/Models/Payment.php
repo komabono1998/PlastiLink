@@ -181,6 +181,15 @@ final class Payment
         return array_map('intval', Database::connection()->query("SELECT id FROM payments WHERE status = 'processing' ORDER BY id")->fetchAll(PDO::FETCH_COLUMN));
     }
 
+    /** Approved payouts waiting to be paid (pending or failed), for the pickers at the given hubs (null = all). */
+    public static function awaitingProcessCount(?array $hubScope): int
+    {
+        $w = $hubScope === null ? '' : ($hubScope ? 'AND p.preferred_hub_id IN (' . implode(',', array_map('intval', $hubScope)) . ')' : 'AND 1 = 0');
+        return (int) Database::connection()->query(
+            "SELECT COUNT(*) FROM payments pay JOIN pickers p ON p.id = pay.picker_id WHERE pay.direction = 'out' AND pay.status IN ('pending','failed') $w"
+        )->fetchColumn();
+    }
+
     /** @return array<string,int> status => count */
     public static function countByStatus(): array
     {

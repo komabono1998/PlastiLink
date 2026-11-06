@@ -49,6 +49,7 @@ $cleanup = function () use ($pdo): void {
     $pdo->exec("DELETE FROM audit_logs WHERE user_id IN ($userIn) OR (entity_type = 'transfer' AND entity_id IN ($tr)) OR (entity_type = 'dispatch' AND entity_id IN ($dp))
                 OR (entity_type = 'adjustment' AND entity_id IN ($ad)) OR (entity_type = 'collection' AND entity_id IN ($col)) OR (entity_type = 'price' AND entity_id IN ($pr))
                 OR (entity_type = 'user' AND entity_id IN ($userIn))");
+    $pdo->exec("DELETE FROM financial_ledger WHERE source_type = 'collection' AND source_id IN ($col)");
     $pdo->exec("DELETE FROM stock_movements WHERE hub_id IN ($hubIn)");
     $pdo->exec("DELETE FROM stock_adjustments WHERE id IN ($ad)");
     $pdo->exec("DELETE FROM stock_dispatches WHERE id IN ($dp)");

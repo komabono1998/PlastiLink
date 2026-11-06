@@ -1,7 +1,7 @@
 <?php
 /** @var int $usersTotal @var int $usersActive @var int $usersPending @var int $usersSuspended
  *  @var int $pickersTotal @var int $pickersPending @var int $recyclersTotal @var int $recyclersPending @var int $hubsActive
- *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime @var array $stock @var int $transfersTransit @var int $adjustmentsPending @var array $orderStats */
+ *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime @var array $stock @var int $transfersTransit @var int $adjustmentsPending @var array $orderStats @var ?array $fin */
 $waiting = $pickersPending + $recyclersPending;
 ?>
 <?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Finance and payments (Phase 7)', 'Reports and analytics (Phase 8)']]) ?>
@@ -28,6 +28,20 @@ $waiting = $pickersPending + $recyclersPending;
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'calendar-day', 'value' => format_kg($today['kg']), 'label' => 'Collected today', 'hint' => $today['recorded'] . ' recorded']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $allTime['pending'], 'label' => 'Collections awaiting approval']) ?></div>
 </div>
+
+<?php if (!empty($fin)): ?>
+<?php if ($fin['pending_approvals'] > 0 && can('payments.approve')): ?>
+  <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status"><span><i class="bi bi-cash-stack"></i> <strong><?= e($fin['pending_approvals']) ?></strong> payout request<?= $fin['pending_approvals'] === 1 ? '' : 's' ?> waiting for your approval.</span>
+    <a class="btn btn-sm btn-primary" href="<?= e(url('/payouts?status=pending_approval')) ?>">Review</a></div>
+<?php endif; ?>
+<h2 class="h6 text-muted">Money</h2>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'wallet2', 'value' => format_ugx($fin['owed']), 'label' => 'Owed to pickers', 'hint' => format_ugx($fin['paid']) . ' paid so far']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'file-earmark-text', 'value' => format_ugx($fin['outstanding']), 'label' => 'Owed by recyclers', 'hint' => format_ugx($fin['overdue']) . ' overdue']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'check2-circle', 'value' => format_ugx($fin['received']), 'label' => 'Received from recyclers']) ?></div>
+  <div class="col-6 col-lg-3"><a class="text-decoration-none text-reset" href="<?= e(url('/finance')) ?>"><?= component('stat-card', ['icon' => 'graph-up-arrow', 'value' => 'Open', 'label' => 'Finance summary and ledger check']) ?></a></div>
+</div>
+<?php endif; ?>
 
 <?php if (can('orders.review')): ?>
 <h2 class="h6 text-muted">Marketplace</h2>
