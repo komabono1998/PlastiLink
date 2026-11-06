@@ -408,6 +408,7 @@ final class OrderService
                 StockService::release((int) $row['hub_id'], (int) $row['plastic_category_id'], $remaining, 'order', $id, (int) $actor['id'], PurchaseOrder::find($id)['reference']);
                 PurchaseOrder::complete($id, Weight::toDecimal($remaining), (int) $actor['id'], mb_substr($note, 0, 500));
                 AuditLog::write('order.closed_short', (int) $actor['id'], 'order', $id, ['short_kg' => Weight::toDecimal($remaining), 'note' => mb_substr($note, 0, 200)]);
+                InvoiceService::tryIssue($id, (int) $actor['id']);   // invoices what has been confirmed, unless loads are still awaiting confirmation
                 return ['error' => null, 'message' => 'Order closed. The undelivered ' . format_kg(Weight::toDecimal($remaining)) . ' is available again.'];
             });
         } catch (StockException $e) {
@@ -512,8 +513,11 @@ final class OrderService
             if ($row['status'] === 'in_delivery' && Weight::fromDecimal((string) $item['dispatched_kg']) === Weight::fromDecimal((string) $item['agreed_qty_kg']) && $pending === 0) {
                 PurchaseOrder::complete($id, '0.00', null, null);
                 AuditLog::write('order.completed', (int) $actor['id'], 'order', $id);
-                return ['error' => null, 'message' => 'Receipt confirmed. This order is now complete.'];
+                InvoiceService::tryIssue($id, (int) $actor['id']);
+                return ['error' => null, 'message' => 'Receipt confirmed. This order is now complete and has been invoiced.'];
             }
+            // An order the hub closed short is invoiced as soon as its last outstanding load has been confirmed.
+            InvoiceService::tryIssue($id, (int) $actor['id']);
             return ['error' => null, 'message' => 'Receipt confirmed.'];
         });
     }

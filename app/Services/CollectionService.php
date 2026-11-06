@@ -250,6 +250,10 @@ final class CollectionService
             // Approved plastic enters the hub's stock (same transaction: no receipt without stock, no stock without a receipt).
             StockService::post('collection_in', (int) $row['hub_id'], (int) $row['plastic_category_id'], Weight::fromDecimal((string) $row['net_weight_kg']),
                 0, 'collection', $id, $full['reference'], null, (int) $actor['id']);
+            // ...and the picker's earnings account is credited with the collection's value.
+            if ((int) $row['total_value_ugx'] > 0) {
+                LedgerService::post('picker', (int) $row['picker_id'], 'collection_earning', (int) $row['total_value_ugx'], 'collection', $id, $full['reference'], null, (int) $actor['id']);
+            }
             AuditLog::write('collection.approved', (int) $actor['id'], 'collection', $id, ['total' => (int) $row['total_value_ugx']]);
             return ['error' => null, 'message' => 'Collection approved and receipt issued.'];
         });
@@ -303,8 +307,17 @@ final class CollectionService
                 // Take the plastic back out of stock. Refused (and everything rolled back) if it has already left the hub.
                 StockService::post('collection_reversal', (int) $row['hub_id'], (int) $row['plastic_category_id'], -Weight::fromDecimal((string) $row['net_weight_kg']),
                     0, 'collection', $id, $row['reference'], mb_substr($reason, 0, 255), (int) $actor['id']);
+                // Take the earnings back. If the picker was already paid, their balance goes negative and is recovered from future earnings.
+                $warning = '';
+                if ((int) $row['total_value_ugx'] > 0) {
+                    LedgerService::post('picker', (int) $row['picker_id'], 'collection_reversal', -(int) $row['total_value_ugx'], 'collection', $id, $row['reference'], mb_substr($reason, 0, 255), (int) $actor['id']);
+                    $bal = LedgerService::balance('picker', (int) $row['picker_id']);
+                    if ($bal < 0) {
+                        $warning = ' WARNING: this picker had already been paid for it, so their balance is now ' . format_ugx($bal) . ' and will be recovered from their future earnings.';
+                    }
+                }
                 AuditLog::write('collection.reversed', (int) $actor['id'], 'collection', $id, ['reason' => mb_substr($reason, 0, 200), 'total' => (int) $row['total_value_ugx']]);
-                return ['error' => null, 'message' => 'Collection reversed and its receipt voided. The plastic was taken out of stock.'];
+                return ['error' => null, 'message' => 'Collection reversed and its receipt voided. The plastic was taken out of stock and the earnings were taken back.' . $warning];
             });
         } catch (StockException $e) {
             return ['error' => 'This collection cannot be reversed because its plastic is no longer available in the hub\'s stock (it was dispatched, transferred, written off or reserved). '
