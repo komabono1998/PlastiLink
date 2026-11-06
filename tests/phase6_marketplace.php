@@ -252,8 +252,10 @@ foreach ($jobs as $j) {
     $hs[] = $ch;
 }
 do { curl_multi_exec($mh, $running); curl_multi_select($mh, 0.2); } while ($running > 0);
-foreach ($hs as $ch) { curl_multi_remove_handle($mh, $ch); }
+$codes = [];
+foreach ($hs as $ch) { $codes[] = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_multi_remove_handle($mh, $ch); }
 curl_multi_close($mh);
+check('Race: neither simultaneous request ended in a server error (both got a normal redirect)', $codes === [303, 303], json_encode($codes));
 $st = [$pdo->query("SELECT status FROM purchase_orders WHERE id = $ox")->fetchColumn(), $pdo->query("SELECT status FROM purchase_orders WHERE id = $oy")->fetchColumn()];
 sort($st);
 check('Race: exactly ONE of two simultaneous acceptances for the last 10 kg succeeds', $st === ['confirmed', 'negotiating'], json_encode($st));

@@ -13,10 +13,16 @@ final class StockBalance
     public static function lock(int $hubId, int $catId): array
     {
         $pdo = Database::connection();
+        $sel = $pdo->prepare('SELECT * FROM inventory WHERE hub_id = ? AND plastic_category_id = ? FOR UPDATE');
+        // Lock the existing row straight away. (Doing INSERT IGNORE first takes a SHARED lock on an existing row, and two
+        // transactions that both hold it and then ask for the exclusive lock deadlock.)
+        $sel->execute([$hubId, $catId]);
+        if ($row = $sel->fetch()) {
+            return $row;
+        }
         $pdo->prepare('INSERT IGNORE INTO inventory (hub_id, plastic_category_id) VALUES (?, ?)')->execute([$hubId, $catId]);
-        $s = $pdo->prepare('SELECT * FROM inventory WHERE hub_id = ? AND plastic_category_id = ? FOR UPDATE');
-        $s->execute([$hubId, $catId]);
-        return $s->fetch();
+        $sel->execute([$hubId, $catId]);
+        return $sel->fetch();
     }
 
     public static function find(int $hubId, int $catId): ?array

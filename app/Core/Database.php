@@ -31,20 +31,30 @@ final class Database
         return self::$pdo;
     }
 
-    /** Run a callback inside a transaction; rolls back and rethrows on failure. */
+    /**
+     * Run a callback inside a transaction; rolls back and rethrows on failure.
+     * A database deadlock (SQLSTATE 40001) rolls everything back and the callback is retried a few times, because the
+     * callbacks only touch the database and are safe to run again. Other errors are never retried.
+     */
     public static function transaction(callable $fn): mixed
     {
         $pdo = self::connection();
-        $pdo->beginTransaction();
-        try {
-            $result = $fn($pdo);
-            $pdo->commit();
-            return $result;
-        } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+        for ($attempt = 1; ; $attempt++) {
+            $pdo->beginTransaction();
+            try {
+                $result = $fn($pdo);
+                $pdo->commit();
+                return $result;
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $deadlock = $e instanceof \PDOException && ($e->getCode() === '40001' || str_contains($e->getMessage(), 'Deadlock'));
+                if (!$deadlock || $attempt >= 4) {
+                    throw $e;
+                }
+                usleep(random_int(20000, 90000));   // back off briefly so the other transaction can finish
             }
-            throw $e;
         }
     }
 

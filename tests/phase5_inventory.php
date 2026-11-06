@@ -349,13 +349,16 @@ foreach ($jobs as $i => $j) {
 }
 do { curl_multi_exec($mh, $running); curl_multi_select($mh, 0.2); } while ($running > 0);
 $locs = [];
+$codes = [];
 foreach ($handles as $ch) {
+    $codes[] = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     $raw = (string) curl_multi_getcontent($ch);
     preg_match('/^Location:\s*(\S+)/mi', $raw, $lm);
     $locs[] = $lm[1] ?? '';
     curl_multi_remove_handle($mh, $ch);
 }
 curl_multi_close($mh);
+check('Race: neither simultaneous request ended in a server error (both got a normal redirect)', $codes === [303, 303], json_encode($codes));
 $made = (int) $pdo->query("SELECT COUNT(*) FROM stock_dispatches WHERE submission_token IN ('$tokA', '$tokB')")->fetchColumn();
 check('Race: of two simultaneous full-stock dispatches exactly ONE is created', $made === 1, "made=$made locs=" . json_encode($locs));
 check('Race: stock is exactly 0 (never negative) and the ledger agrees', $lvl($hubA) === '0.00' && $ledger($hubA) === '0.00');
