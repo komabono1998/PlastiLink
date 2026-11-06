@@ -48,6 +48,12 @@ final class Database
         }
     }
 
+    /** Run inside the current transaction if there is one, otherwise open a new one. */
+    public static function atomic(callable $fn): mixed
+    {
+        return self::connection()->inTransaction() ? $fn(self::connection()) : self::transaction($fn);
+    }
+
     public static function reset(): void
     {
         self::$pdo = null;

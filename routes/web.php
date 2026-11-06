@@ -7,7 +7,11 @@ use App\Controllers\AccountController;
 use App\Controllers\ApprovalController;
 use App\Controllers\AuditController;
 use App\Controllers\AuthController;
+use App\Controllers\AdjustmentController;
 use App\Controllers\CollectionController;
+use App\Controllers\DispatchController;
+use App\Controllers\InventoryController;
+use App\Controllers\TransferController;
 use App\Controllers\PriceController;
 use App\Controllers\ReceiptController;
 use App\Controllers\DashboardController;
@@ -107,6 +111,32 @@ $router->post('/collections/{id:\d+}/approve', [CollectionController::class, 'ap
 $router->post('/collections/{id:\d+}/reject', [CollectionController::class, 'reject'], [$auth, new PermissionMiddleware('collections.approve')]);
 $router->post('/collections/{id:\d+}/reverse', [CollectionController::class, 'reverse'], [$auth, new PermissionMiddleware('collections.reverse')]);
 $router->get('/receipts/{id:\d+}', [ReceiptController::class, 'show'], $viewCol);
+
+// Inventory: a ledger of movements (stock is never edited directly)
+$viewInv = [$auth, new PermissionMiddleware('inventory.view')];
+$manageInv = [$auth, new PermissionMiddleware('inventory.manage')];
+$router->get('/inventory', [InventoryController::class, 'index'], $viewInv);
+$router->get('/inventory/movements', [InventoryController::class, 'movements'], $viewInv);
+
+$router->get('/inventory/transfers', [TransferController::class, 'index'], $viewInv);
+$router->get('/inventory/transfers/new', [TransferController::class, 'create'], $manageInv);
+$router->post('/inventory/transfers', [TransferController::class, 'store'], $manageInv);
+$router->get('/inventory/transfers/{id:\d+}', [TransferController::class, 'show'], $viewInv);
+$router->post('/inventory/transfers/{id:\d+}/receive', [TransferController::class, 'receive'], $manageInv);
+$router->post('/inventory/transfers/{id:\d+}/cancel', [TransferController::class, 'cancel'], $manageInv);
+
+$router->get('/inventory/dispatches', [DispatchController::class, 'index'], $viewInv);
+$router->get('/inventory/dispatches/new', [DispatchController::class, 'create'], $manageInv);
+$router->post('/inventory/dispatches', [DispatchController::class, 'store'], $manageInv);
+$router->get('/inventory/dispatches/{id:\d+}', [DispatchController::class, 'show'], $viewInv);
+$router->post('/inventory/dispatches/{id:\d+}/delivered', [DispatchController::class, 'delivered'], $manageInv);
+$router->post('/inventory/dispatches/{id:\d+}/cancel', [DispatchController::class, 'cancel'], $manageInv);
+
+$router->get('/inventory/adjustments', [AdjustmentController::class, 'index'], $viewInv);
+$router->get('/inventory/adjustments/new', [AdjustmentController::class, 'create'], $manageInv);
+$router->post('/inventory/adjustments', [AdjustmentController::class, 'store'], $manageInv);
+$router->get('/inventory/adjustments/{id:\d+}', [AdjustmentController::class, 'show'], $viewInv);
+$router->post('/inventory/adjustments/{id:\d+}/decision', [AdjustmentController::class, 'decide'], [$auth, new PermissionMiddleware('inventory.approve')]);
 
 // Recyclers
 $anyRecycler = [$auth, new AnyPermissionMiddleware('recyclers.approve', 'recyclers.manage')];

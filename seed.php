@@ -110,6 +110,18 @@ if ($command === 'demo-data') {
             }
         }
     }
+    // Demo stock movements (deterministic tokens: safe to re-run).
+    if ($mgrId && $petId && !empty($mgr)) {
+        $recId = (int) $pdo->query("SELECT r.id FROM recyclers r JOIN users u ON u.id = r.user_id WHERE u.email = 'demo.recycler@example.test' AND r.status = 'approved'")->fetchColumn();
+        if ($recId) {
+            App\Services\DispatchService::create(['token' => md5('demo-dispatch-1'), 'hub_id' => $hubIds[0], 'recycler_id' => $recId, 'plastic_category_id' => $petId,
+                'quantity_kg' => '20', 'vehicle' => 'DEMO UAA 000A', 'driver' => 'DEMO Driver', 'notes' => 'DEMO dispatch'], $mgr);
+        }
+        App\Services\TransferService::send(['token' => md5('demo-transfer-1'), 'from_hub_id' => $hubIds[0], 'to_hub_id' => $hubIds[1], 'plastic_category_id' => $petId,
+            'quantity_kg' => '5', 'notes' => 'DEMO transfer (waiting to be received)'], $mgr);
+        App\Services\AdjustmentService::request(['token' => md5('demo-adjustment-1'), 'kind' => 'count', 'hub_id' => $hubIds[0], 'plastic_category_id' => $petId,
+            'quantity_kg' => '40', 'reason' => 'DEMO physical count (waiting for approval)'], $mgr);
+    }
     echo "Demo hubs, pickers, recyclers, a DEMO price and collections are in place (all labelled DEMO). Run 'demo-users' first for sign-in accounts.\n";
     exit(0);
 }

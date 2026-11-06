@@ -4,7 +4,7 @@
 
 **Stack:** PHP 8.2+ (custom MVC, no framework) · PDO · MySQL/MariaDB · Bootstrap 5 · Bootstrap Icons · Chart.js. No Composer or Node needed.
 
-**Status:** Phases 1 (foundation), 2 (authentication and RBAC), 3 (administration and registrations) and 4 (collection hub operations) complete. See "Roadmap".
+**Status:** Phases 1 (foundation), 2 (authentication and RBAC), 3 (administration and registrations), 4 (collection hub operations) and 5 (inventory) complete. See "Roadmap".
 
 ## Local setup (Windows + XAMPP)
 
@@ -67,6 +67,19 @@ Passwords are random and printed once in your terminal; they are never stored in
 - **Stock and payments:** approving a collection does not yet change stock (Phase 5 builds the stock ledger and back-fills it from approved collections) or pay anyone (Phase 7). Picker pages label the value "not yet paid".
 - `php seed.php demo-data` now also adds a DEMO price and 8 DEMO collections (6 approved, 2 pending).
 
+### Inventory (Phase 5)
+
+- **Screens** (`/inventory` and its tabs): stock balances, the movement ledger, transfers, dispatches and adjustments. Hub staff only ever see their own hubs.
+- **Ledger, not editable balances:** every change is an append-only row in `stock_movements` (signed quantity, balance after, source, reference, who). The `inventory` balance row is updated in the same transaction under a row lock, and `/inventory` shows a "stock check" that compares every balance with the sum of its movements. `App\Services\StockService` is the only code that writes the ledger.
+- **Rules enforced in code and by database CHECKs:** stock never goes below zero; reserved stock never exceeds stock on hand; the same event can never be posted twice (unique source key).
+- **Incoming stock:** approving a collection adds its net weight; reversing a collection removes it, and the reversal is **refused** (and fully rolled back) if that plastic has already left the hub or is reserved. Migration `0013` back-fills stock from collections approved before Phase 5 and is safe to re-run.
+- **Transfers (two steps):** the sender's stock leaves at once ("in transit"); the receiving hub confirms the weight that arrived (never more than was sent; a shortfall needs a note and is recorded as a transit loss). A transfer can be cancelled while in transit.
+- **Dispatch:** stock leaving for an *approved* recycler, with a printable delivery note. Cancel is possible until it is marked delivered. Purchase orders and pricing link in during Phase 6.
+- **Adjustments:** manual stock entry, write-offs and physical counts are requests that change nothing until a *different* person (Project Manager, Super Administrator, or another Hub Manager at that hub) approves. A count is applied as the difference between counted and system stock at the time of the count.
+- **Reservations:** `StockService::reserve()` / `release()` exist and are tested; screens that use them arrive with purchase orders (Phase 6).
+- `php seed.php demo-data` also adds a DEMO dispatch, a DEMO transfer waiting to be received and a DEMO count waiting for approval.
+- Asset URLs now carry a version stamp (`?v=`), so browsers pick up CSS/JS changes after a deploy.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -78,7 +91,8 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php tests/phase2_auth.php` | Run Phase 2 auth/RBAC tests (creates and removes temporary test users) |
 | `php tests/phase3_admin.php` | Run Phase 3 administration, registration, approval and hub-scoping tests |
 | `php tests/phase4_collections.php` | Run Phase 4 price, collection, approval, receipt and scoping tests |
-| `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price and collections |
+| `php tests/phase5_inventory.php` | Run Phase 5 ledger, transfer, dispatch, adjustment, reservation and race tests |
+| `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price, collections and stock movements |
 
 `/styleguide` shows the shared design system. It is only registered when `app.env` is not `production`.
 
@@ -121,7 +135,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 2. **Authentication and RBAC** ✅
 3. **Administration and user management** ✅
 4. **Collection hub operations** ✅
-5. Inventory
+5. **Inventory** ✅
 6. Recycler marketplace
 7. Financial management
 8. Reports and analytics

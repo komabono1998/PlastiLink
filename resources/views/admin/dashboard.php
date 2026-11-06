@@ -1,10 +1,10 @@
 <?php
 /** @var int $usersTotal @var int $usersActive @var int $usersPending @var int $usersSuspended
  *  @var int $pickersTotal @var int $pickersPending @var int $recyclersTotal @var int $recyclersPending @var int $hubsActive
- *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime */
+ *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime @var array $stock @var int $transfersTransit @var int $adjustmentsPending */
 $waiting = $pickersPending + $recyclersPending;
 ?>
-<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Inventory, marketplace and finance (Phases 5 to 7)']]) ?>
+<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Marketplace and finance (Phases 6 and 7)']]) ?>
 
 <?php if ($waiting > 0 && can('pickers.manage', 'recyclers.approve')): ?>
   <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
@@ -27,6 +27,16 @@ $waiting = $pickersPending + $recyclersPending;
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($allTime['value']), 'label' => 'Total value']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'calendar-day', 'value' => format_kg($today['kg']), 'label' => 'Collected today', 'hint' => $today['recorded'] . ' recorded']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $allTime['pending'], 'label' => 'Collections awaiting approval']) ?></div>
+</div>
+
+<h2 class="h6 text-muted">Stock on hand</h2>
+<div class="row g-3 mb-4">
+  <?php if (!$stock): ?><div class="col-12"><div class="card"><?= component('empty-state', ['icon' => 'boxes', 'title' => 'No stock yet']) ?></div></div><?php endif; ?>
+  <?php foreach ($stock as $s): ?>
+    <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'boxes', 'value' => format_kg($s['on_hand_kg']), 'label' => $s['category_name'] . ' on hand (all hubs)', 'hint' => format_kg($s['reserved_kg']) . ' reserved']) ?></div>
+  <?php endforeach; ?>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'arrow-left-right', 'value' => (string) $transfersTransit, 'label' => 'Transfers in transit']) ?></div>
+  <?php if (can('inventory.approve')): ?><div class="col-6 col-lg-3"><a class="text-decoration-none text-reset" href="<?= e(url('/inventory/adjustments?status=pending')) ?>"><?= component('stat-card', ['icon' => 'clipboard-check', 'value' => (string) $adjustmentsPending, 'label' => 'Adjustments awaiting approval']) ?></a></div><?php endif; ?>
 </div>
 
 <div class="row g-3">

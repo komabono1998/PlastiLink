@@ -1,7 +1,7 @@
-<?php /** @var array $myHubs @var int $pickersTotal @var int $pickersPending @var array $today @var array $recent */ ?>
+<?php /** @var array $myHubs @var int $pickersTotal @var int $pickersPending @var array $today @var array $recent @var array $stock @var int $transfersWaiting @var int $adjustmentsPending */ ?>
 <?= component('welcome', [
     'user' => auth_user(), 'blurb' => 'Hub operations',
-    'coming' => ['Hub stock and daily stock summaries (Phase 5)'],
+    'coming' => ['Recycler marketplace and purchase orders (Phase 6)'],
 ]) ?>
 
 <div class="d-flex flex-wrap gap-2 mt-1 mb-3">
@@ -15,6 +15,16 @@
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'speedometer2', 'value' => format_kg($today['kg']), 'label' => 'Approved weight today']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($today['value']), 'label' => 'Approved value today']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $today['pending'], 'label' => 'Waiting for approval', 'hint' => $pickersPending . ' pickers pending']) ?></div>
+</div>
+
+<h2 class="h6 text-muted">Stock at my hubs</h2>
+<div class="row g-3 mb-4">
+  <?php if (!$stock): ?><div class="col-12"><div class="card"><?= component('empty-state', ['icon' => 'boxes', 'title' => 'No stock yet', 'text' => 'Stock appears when collections are approved.']) ?></div></div><?php endif; ?>
+  <?php foreach ($stock as $s): ?>
+    <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'boxes', 'value' => format_kg($s['on_hand_kg']), 'label' => $s['category_name'] . ' on hand', 'hint' => format_kg($s['reserved_kg']) . ' reserved']) ?></div>
+  <?php endforeach; ?>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'arrow-left-right', 'value' => (string) $transfersWaiting, 'label' => 'Transfers in transit', 'hint' => 'Open Inventory to confirm receipt']) ?></div>
+  <?php if (can('inventory.approve')): ?><div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'clipboard-check', 'value' => (string) $adjustmentsPending, 'label' => 'Adjustments awaiting approval']) ?></div><?php endif; ?>
 </div>
 
 <?php if (!$myHubs): ?>

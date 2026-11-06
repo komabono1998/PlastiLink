@@ -70,6 +70,15 @@ final class Recycler
         )->execute([$status, $byUserId, $reason, $id]);
     }
 
+    /** @return array<int,string> id => business name of approved recyclers whose login is active */
+    public static function approvedOptions(): array
+    {
+        return Database::connection()->query(
+            "SELECT r.id, r.business_name FROM recyclers r JOIN users u ON u.id = r.user_id
+             WHERE r.status = 'approved' AND u.status = 'active' ORDER BY r.business_name"
+        )->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
     public static function countByStatus(): array
     {
         return Database::connection()->query('SELECT status, COUNT(*) FROM recyclers GROUP BY status')->fetchAll(PDO::FETCH_KEY_PAIR);

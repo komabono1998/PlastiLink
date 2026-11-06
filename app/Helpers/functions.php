@@ -25,9 +25,13 @@ function url(string $path = ''): string
     return Request::basePath() . '/' . ltrim($path, '/');
 }
 
+/** Asset URL with a version stamp (file modification time) so browsers fetch updated CSS/JS after a deploy. */
 function asset(string $path): string
 {
-    return url('assets/' . ltrim($path, '/'));
+    $path = ltrim($path, '/');
+    $file = BASE_PATH . '/public/assets/' . $path;
+    $v = is_file($file) ? '?v=' . filemtime($file) : '';
+    return url('assets/' . $path) . $v;
 }
 
 /** Render a reusable view component (resources/views/components/<name>.php). */

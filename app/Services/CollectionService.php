@@ -245,7 +245,11 @@ final class CollectionService
                 return ['error' => 'You recorded this collection, so someone else must approve it.'];
             }
             Collection::setDecision($id, 'approved', (int) $actor['id'], null);
-            ReceiptService::issue(Collection::find($id), $actor);
+            $full = Collection::find($id);
+            ReceiptService::issue($full, $actor);
+            // Approved plastic enters the hub's stock (same transaction: no receipt without stock, no stock without a receipt).
+            StockService::post('collection_in', (int) $row['hub_id'], (int) $row['plastic_category_id'], Weight::fromDecimal((string) $row['net_weight_kg']),
+                0, 'collection', $id, $full['reference'], null, (int) $actor['id']);
             AuditLog::write('collection.approved', (int) $actor['id'], 'collection', $id, ['total' => (int) $row['total_value_ugx']]);
             return ['error' => null, 'message' => 'Collection approved and receipt issued.'];
         });
@@ -288,15 +292,23 @@ final class CollectionService
         if (mb_strlen($reason) < 5) {
             return ['error' => 'Give a clear reason (at least 5 characters) for reversing this collection.'];
         }
-        return Database::transaction(function () use ($id, $reason, $actor): array {
-            $row = Collection::lock($id);
-            if (!$row || !self::canMove($row['status'], 'reversed')) {
-                return ['error' => 'Only approved collections can be reversed.'];
-            }
-            Collection::setReversal($id, (int) $actor['id'], mb_substr($reason, 0, 500));
-            Receipt::void($id, mb_substr($reason, 0, 500));
-            AuditLog::write('collection.reversed', (int) $actor['id'], 'collection', $id, ['reason' => mb_substr($reason, 0, 200), 'total' => (int) $row['total_value_ugx']]);
-            return ['error' => null, 'message' => 'Collection reversed and its receipt voided.'];
-        });
+        try {
+            return Database::transaction(function () use ($id, $reason, $actor): array {
+                $row = Collection::lock($id);
+                if (!$row || !self::canMove($row['status'], 'reversed')) {
+                    return ['error' => 'Only approved collections can be reversed.'];
+                }
+                Collection::setReversal($id, (int) $actor['id'], mb_substr($reason, 0, 500));
+                Receipt::void($id, mb_substr($reason, 0, 500));
+                // Take the plastic back out of stock. Refused (and everything rolled back) if it has already left the hub.
+                StockService::post('collection_reversal', (int) $row['hub_id'], (int) $row['plastic_category_id'], -Weight::fromDecimal((string) $row['net_weight_kg']),
+                    0, 'collection', $id, $row['reference'], mb_substr($reason, 0, 255), (int) $actor['id']);
+                AuditLog::write('collection.reversed', (int) $actor['id'], 'collection', $id, ['reason' => mb_substr($reason, 0, 200), 'total' => (int) $row['total_value_ugx']]);
+                return ['error' => null, 'message' => 'Collection reversed and its receipt voided. The plastic was taken out of stock.'];
+            });
+        } catch (StockException $e) {
+            return ['error' => 'This collection cannot be reversed because its plastic is no longer available in the hub\'s stock (it was dispatched, transferred, written off or reserved). '
+                . 'Return or adjust that stock first, then reverse. ' . $e->getMessage()];
+        }
     }
 }

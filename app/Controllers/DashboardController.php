@@ -11,6 +11,9 @@ use App\Models\Hub;
 use App\Models\LoginAttempt;
 use App\Models\Picker;
 use App\Models\Recycler;
+use App\Models\StockAdjustment;
+use App\Models\StockBalance;
+use App\Models\StockTransfer;
 use App\Models\User;
 use App\Services\AuthService;
 use App\Services\HubScope;
@@ -41,6 +44,9 @@ final class DashboardController extends Controller
             'hubsActive'     => $hubs['active'] ?? 0,
             'today'          => Collection::summary(null, null, ...(Dates::dayRangeUtc(Dates::todayYmd()) ?? [null, null])),
             'allTime'        => Collection::summary(null, null),
+            'stock'          => StockBalance::totals(null),
+            'transfersTransit' => StockTransfer::pendingReceipts(null),
+            'adjustmentsPending' => StockAdjustment::pendingCount(null),
             'byRole'         => User::countByRole(),
             'failed24h'      => LoginAttempt::failedSince('24 HOUR'),
             'recentLogins'   => LoginAttempt::recentSuccessful(5),
@@ -57,6 +63,9 @@ final class DashboardController extends Controller
             'pickersPending' => $pickers['pending'] ?? 0,
             'today'          => Collection::summary($scope, null, ...(Dates::dayRangeUtc(Dates::todayYmd()) ?? [null, null])),
             'recent'         => Collection::paginate([], $scope, null, 0, 5),
+            'stock'          => StockBalance::totals($scope),
+            'transfersWaiting' => StockTransfer::pendingReceipts($scope),
+            'adjustmentsPending' => StockAdjustment::pendingCount($scope),
         ]);
     }
 
@@ -87,6 +96,7 @@ final class DashboardController extends Controller
             ['/users', 'people', 'Users', $can('users.view'), false],
             ['/pickers', 'person-badge', 'Waste pickers', $can('pickers.view'), false],
             ['/collections', 'box-seam', $user['role_slug'] === 'waste_picker' ? 'My collections' : 'Collections', $can('collections.view'), false],
+            ['/inventory', 'boxes', 'Inventory', $can('inventory.view'), false],
             ['/prices', 'tag', 'Prices', $can('prices.view'), false],
             ['/hubs', 'shop', 'Collection hubs', $can('hubs.view'), false],
             ['/recyclers', 'building', 'Recyclers', $can('recyclers.approve', 'recyclers.manage'), false],

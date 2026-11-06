@@ -28,6 +28,21 @@ final class Weight
         return intdiv($hundredths, 100) . '.' . str_pad((string) ($hundredths % 100), 2, '0', STR_PAD_LEFT);
     }
 
+    /** Signed hundredths -> "-12.50" / "12.50". */
+    public static function toSignedDecimal(int $hundredths): string
+    {
+        return ($hundredths < 0 ? '-' : '') . self::toDecimal(abs($hundredths));
+    }
+
+    /** A DECIMAL column value ("12.50", "-3.00") -> signed hundredths. No floats. */
+    public static function fromDecimal(string $decimal): int
+    {
+        $neg = str_starts_with($decimal, '-');
+        [$i, $f] = array_pad(explode('.', ltrim($decimal, '-'), 2), 2, '0');
+        $v = (int) $i * 100 + (int) str_pad(substr($f, 0, 2), 2, '0');
+        return $neg ? -$v : $v;
+    }
+
     /** Whole-UGX value = net kg x price per kg, rounded half-up. */
     public static function value(int $netHundredths, int $pricePerKg): int
     {
