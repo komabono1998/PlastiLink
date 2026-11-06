@@ -3,25 +3,33 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Middleware\Middleware;
+
 final class Router
 {
-    /** @var array<int, array{method:string, regex:string, handler:callable|array}> */
+    /** @var array<int, array{method:string, regex:string, handler:callable|array, middleware:array}> */
     private array $routes = [];
 
-    public function get(string $pattern, callable|array $handler): void
+    /** @param Middleware[] $middleware */
+    public function get(string $pattern, callable|array $handler, array $middleware = []): void
     {
-        $this->add('GET', $pattern, $handler);
+        $this->add('GET', $pattern, $handler, $middleware);
     }
 
-    public function post(string $pattern, callable|array $handler): void
+    /** @param Middleware[] $middleware */
+    public function post(string $pattern, callable|array $handler, array $middleware = []): void
     {
-        $this->add('POST', $pattern, $handler);
+        $this->add('POST', $pattern, $handler, $middleware);
     }
 
-    public function add(string $method, string $pattern, callable|array $handler): void
+    /** @param Middleware[] $middleware */
+    public function add(string $method, string $pattern, callable|array $handler, array $middleware = []): void
     {
         $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', rtrim($pattern, '/') ?: '/') . '$#';
-        $this->routes[] = ['method' => strtoupper($method), 'regex' => $regex, 'handler' => $handler];
+        $this->routes[] = [
+            'method' => strtoupper($method), 'regex' => $regex,
+            'handler' => $handler, 'middleware' => $middleware,
+        ];
     }
 
     /** Returns the response body (string) after setting status/headers. */
@@ -36,6 +44,15 @@ final class Router
                 $allowed[] = $route['method'];
                 continue;
             }
+
+            // Backend-enforced access control: middleware runs before the handler.
+            foreach ($route['middleware'] as $mw) {
+                $short = $mw->handle($request);
+                if ($short !== null) {
+                    return $short;
+                }
+            }
+
             $params = array_filter($m, 'is_string', ARRAY_FILTER_USE_KEY);
             return $this->invoke($route['handler'], $request, $params);
         }

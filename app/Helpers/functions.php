@@ -5,6 +5,7 @@ use App\Core\Config;
 use App\Core\Request;
 use App\Core\Session;
 use App\Core\View;
+use App\Services\AuthService;
 
 /** Read configuration with dot notation. */
 function config(string $key, mixed $default = null): mixed
@@ -38,6 +39,51 @@ function component(string $name, array $data = []): string
 function csrf_field(): string
 {
     return '<input type="hidden" name="_csrf" value="' . e(Session::csrfToken()) . '">';
+}
+
+/** 303 redirect to an in-app path. Returns '' so handlers can `return redirect(...)`. */
+function redirect(string $path): string
+{
+    http_response_code(303);
+    header('Location: ' . url($path));
+    return '';
+}
+
+/** Only allow same-site relative paths (blocks open redirects). */
+function safe_path(?string $path, string $fallback = '/'): string
+{
+    if (!is_string($path) || $path === '' || $path[0] !== '/' || str_starts_with($path, '//')
+        || str_contains($path, '\\') || str_contains($path, ':') || preg_match('/[\x00-\x1f]/', $path)) {
+        return $fallback;
+    }
+    return $path;
+}
+
+/** The signed-in user (without password hash) or null. */
+function auth_user(): ?array
+{
+    return AuthService::user();
+}
+
+function can(string $permission): bool
+{
+    return AuthService::can($permission);
+}
+
+/** Renders and clears queued flash messages. */
+function flash_messages(): string
+{
+    $html = '';
+    foreach (Session::pullFlash() as $f) {
+        $html .= component('alert', ['type' => $f['type'], 'message' => $f['message']]);
+    }
+    return $html;
+}
+
+/** Previously submitted (non-secret) form value. */
+function old(string $key, string $default = ''): string
+{
+    return Session::old($key, $default);
 }
 
 /** Whole-shilling formatting: UGX 12,500 */

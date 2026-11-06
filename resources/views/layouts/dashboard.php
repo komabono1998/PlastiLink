@@ -25,7 +25,7 @@ $nav = $nav ?? [];
     <a class="brand brand-on-dark d-block mb-4 px-2" href="<?= e(url('/')) ?>"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></a>
     <nav class="nav flex-column gap-1">
       <?php foreach ($nav as $item): ?>
-        <a class="nav-link" href="<?= e($item['href']) ?>"><i class="bi bi-<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?></a>
+        <a class="nav-link<?= !empty($item['active']) ? ' active' : '' ?>" href="<?= e($item['href']) ?>"<?= !empty($item['active']) ? ' aria-current="page"' : '' ?>><i class="bi bi-<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?></a>
       <?php endforeach; ?>
     </nav>
   </aside>
@@ -34,9 +34,22 @@ $nav = $nav ?? [];
     <header class="dash-topbar d-flex align-items-center gap-3 px-3 py-2">
       <button class="btn btn-outline-primary d-lg-none" type="button" data-sidebar-toggle aria-label="Open menu" aria-expanded="false"><i class="bi bi-list"></i></button>
       <h1 class="h5 mb-0"><?= e($title ?? '') ?></h1>
-      <a class="btn btn-outline-primary btn-sm ms-auto" href="<?= e(url('/')) ?>"><i class="bi bi-house"></i> Home</a>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <?php if ($authUser = auth_user()): ?>
+          <div class="text-end lh-sm d-none d-sm-block">
+            <div class="fw-semibold small"><?= e($authUser['full_name']) ?></div>
+            <div class="small text-muted"><?= e($authUser['role_name']) ?></div>
+          </div>
+          <form method="post" action="<?= e(url('/logout')) ?>" class="m-0">
+            <?= csrf_field() ?>
+            <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button>
+          </form>
+        <?php else: ?>
+          <a class="btn btn-outline-primary btn-sm" href="<?= e(url('/')) ?>"><i class="bi bi-house"></i> Home</a>
+        <?php endif; ?>
+      </div>
     </header>
-    <main class="p-3 p-lg-4"><?= $content ?></main>
+    <main class="p-3 p-lg-4"><?= flash_messages() ?><?= $content ?></main>
   </div>
 </div>
 <script src="<?= e(asset('vendor/bootstrap/bootstrap.bundle.min.js')) ?>"></script>

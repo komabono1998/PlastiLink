@@ -48,6 +48,32 @@ final class Request
         return $base === '.' ? '' : $base;
     }
 
+    /**
+     * Client IP. Uses REMOTE_ADDR only; X-Forwarded-For is spoofable and is not trusted.
+     * (If production sits behind a trusted proxy, configure that explicitly later.)
+     */
+    public static function ip(): string
+    {
+        return substr((string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'), 0, 45);
+    }
+
+    public static function userAgent(): string
+    {
+        return substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? 'cli'), 0, 255);
+    }
+
+    /** scheme://host, from config app.url when set (avoids Host-header injection in emailed links). */
+    public static function baseUrl(): string
+    {
+        $configured = (string) \App\Core\Config::get('app.url', '');
+        if ($configured !== '') {
+            return rtrim($configured, '/');
+        }
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        $host = preg_replace('/[^A-Za-z0-9.\-:]/', '', (string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        return ($https ? 'https' : 'http') . '://' . $host . self::basePath();
+    }
+
     public function input(string $key, mixed $default = null): mixed
     {
         return $this->body[$key] ?? $this->query[$key] ?? $default;

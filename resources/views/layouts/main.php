@@ -25,12 +25,20 @@
           <li class="nav-item"><a class="nav-link" href="<?= e(url('/')) ?>#how-it-works">How it works</a></li>
           <li class="nav-item"><a class="nav-link" href="<?= e(url('/')) ?>#targets">Programme targets</a></li>
           <li class="nav-item"><a class="nav-link" href="<?= e(url('/health')) ?>">System status</a></li>
+          <?php if ($navUser = auth_user()): ?>
+            <li class="nav-item"><a class="btn btn-primary btn-sm" href="<?= e(url('/dashboard')) ?>"><i class="bi bi-speedometer2"></i> My dashboard</a></li>
+          <?php else: ?>
+            <li class="nav-item"><a class="btn btn-primary btn-sm" href="<?= e(url('/login')) ?>"><i class="bi bi-box-arrow-in-right"></i> Sign in</a></li>
+          <?php endif; ?>
         </ul>
       </div>
     </div>
   </nav>
 
-  <main id="main" class="flex-grow-1"><?= $content ?></main>
+  <main id="main" class="flex-grow-1">
+    <?php $flash = flash_messages(); if ($flash !== ''): ?><div class="container pt-3"><?= $flash ?></div><?php endif; ?>
+    <?= $content ?>
+  </main>
 
   <footer class="site-footer py-4 mt-5">
     <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">

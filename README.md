@@ -4,7 +4,7 @@
 
 **Stack:** PHP 8.2+ (custom MVC, no framework) · PDO · MySQL/MariaDB · Bootstrap 5 · Bootstrap Icons · Chart.js. No Composer or Node needed.
 
-**Status:** Phase 1 (foundation) complete. See "Roadmap".
+**Status:** Phases 1 (foundation) and 2 (authentication and RBAC) complete. See "Roadmap".
 
 ## Local setup (Windows + XAMPP)
 
@@ -29,6 +29,24 @@
    ```
 6. Open <http://localhost/PlastiLink/>. Health check: <http://localhost/PlastiLink/health>.
 
+### Demo accounts (local/staging only)
+
+```
+C:\xampp\php\php.exe seed.php demo-users           # create one DEMO account per role
+C:\xampp\php\php.exe seed.php demo-users --reset   # new random passwords
+```
+
+Passwords are random and printed once in your terminal; they are never stored in the repo. The command refuses to run when `app.env` is `production`. Sign in at `/login` with the email (or phone number, for the picker) it prints. Delete demo accounts before real use.
+
+### Authentication and access control
+
+- Sign in with a **phone number or email** (`0771234567`, `+256771234567` and email all work) plus password. Passwords use bcrypt (`password_hash`). Minimum length is 8 (6 for waste pickers) plus a common-password blocklist.
+- 5 failed sign-ins for one account, or 20 from one IP, within 15 minutes lock sign-in until the window passes. Every attempt is stored in `login_attempts`; sign-ins, failures, lockouts, resets and denied access go to `audit_logs`.
+- Account states: `pending`, `active`, `suspended`. Suspension takes effect on the user's next request. Sessions end after 2 hours of inactivity.
+- Roles: `super_admin`, `project_manager`, `hub_manager`, `hub_operator`, `waste_picker`, `recycler`. Permissions live in the `permissions` and `role_permissions` tables.
+- Routes are protected in `routes/web.php` with `AuthMiddleware`, `RoleMiddleware` and `PermissionMiddleware`. The server decides; hidden menu links are cosmetic only.
+- Password reset: `/forgot-password` issues a single-use, 60-minute token (only its SHA-256 hash is stored). Until a real email/SMS provider exists, the message is written to `storage/logs/outbox.log` (the log driver refuses to run in production). Set `app.url` in production so emailed links use your real domain.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -37,6 +55,7 @@
 | `php migrate.php status` | Show applied / pending |
 | `php migrate.php rollback [n]` | Roll back the last n batches |
 | `php tests/phase1_smoke.php` | Run Phase 1 tests (needs Apache running) |
+| `php tests/phase2_auth.php` | Run Phase 2 auth/RBAC tests (creates and removes temporary test users) |
 
 `/styleguide` shows the shared design system. It is only registered when `app.env` is not `production`.
 
@@ -76,7 +95,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 ## Roadmap
 
 1. **Foundation** ✅
-2. Authentication and RBAC
+2. **Authentication and RBAC** ✅
 3. Administration and user management
 4. Collection hub operations
 5. Inventory

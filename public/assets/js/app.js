@@ -16,6 +16,18 @@
   if (backdrop) backdrop.addEventListener('click', function () { setOpen(false); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
 
+  // Show/hide password
+  document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.querySelector(btn.getAttribute('data-toggle-password'));
+      if (!input) return;
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      btn.firstElementChild.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  });
+
   // Loading state on forms: prevents double submission
   document.querySelectorAll('form[data-loading]').forEach(function (form) {
     form.addEventListener('submit', function () {
