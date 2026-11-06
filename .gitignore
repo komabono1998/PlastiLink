@@ -1,0 +1,18 @@
+# Local / secret configuration
+config/*.local.php
+.env
+.env.*
+
+# Runtime files
+storage/logs/*
+storage/receipts/*
+public/uploads/*
+!.gitkeep
+
+# Tooling
+.idea/
+.vscode/
+*.log
+vendor/
+node_modules/
+.claude/

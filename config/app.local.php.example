@@ -1,0 +1,8 @@
+<?php
+declare(strict_types=1);
+
+// Copy to config/app.local.php (git-ignored) for local development.
+return [
+    'env'   => 'local',
+    'debug' => true,
+];

@@ -1,0 +1,17 @@
+# PlastiLink root .htaccess
+# Lets the app run from http://localhost/PlastiLink/ under XAMPP (no vhost needed).
+# On Hostinger, point the domain's document root at /public instead (see README).
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never serve application internals or tooling
+    RewriteRule ^(app|config|database|storage|resources|routes|tests)(/|$) - [F,L]
+    RewriteRule ^(migrate\.php|README\.md|\.git.*|composer\..*)$ - [F,L]
+
+    # Everything else is served from /public
+    RewriteRule ^$ public/ [L]
+    RewriteRule ^(?!public/)(.*)$ public/$1 [L]
+</IfModule>
