@@ -104,6 +104,9 @@ final class RecyclerService
             Recycler::decide($id, $to, $by, $reason);
             User::decide($uid, $userStatus, $by);
             AuditLog::write('recycler.' . $decision, $by, 'recycler', $id, $reason ? ['reason' => mb_substr($reason, 0, 200)] : []);
+            if (in_array($decision, ['approve', 'reject'], true)) {
+                SmsService::notifyRegistration($decision === 'approve' ? 'approved' : 'rejected', User::findById($uid)['phone_e164'] ?? null, $uid);
+            }
         });
         return ['error' => null, 'message' => $msg];
     }

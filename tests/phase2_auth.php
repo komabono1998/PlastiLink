@@ -112,6 +112,7 @@ $cleanup = function () use ($pdo): void {
     $pdo->exec("DELETE FROM audit_logs WHERE details LIKE '%phase2test%' OR details LIKE '%700099001%'");
     $pdo->exec("DELETE FROM login_attempts WHERE identifier LIKE '%phase2test%' OR identifier LIKE '%700099001%'");
     $pdo->exec("DELETE FROM users WHERE email LIKE 'phase2test.%' OR phone_e164 = '+256700099001'");
+    $pdo->exec("DELETE FROM sms_outbox WHERE user_id IS NULL");
 };
 $cleanup();
 

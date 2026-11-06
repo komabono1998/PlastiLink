@@ -116,6 +116,16 @@ Passwords are random and printed once in your terminal; they are never stored in
 - **Charts** load Chart.js only when someone clicks "Show chart".
 - Migration `0020` adds the `reports.export` permission and report indexes.
 
+### External integrations: SMS, USSD, MTN MoMo, Airtel Money (Phase 9)
+
+Everything is **off by default** and falls back to the safe local behaviour. Keys go ONLY in `config/app.local.php` (git-ignored); see `integrations` in `config/app.php` for every setting. **Nothing here has been run against the real providers yet**: it was built from their public documentation and tested against a local fake server, so test each one in its own sandbox before switching it on.
+
+- **SMS** (`app/Services/Sms`, `SmsService`): events (collection approved, payout paid, registration approved/rejected) write to an `sms_outbox` queue inside their own transaction; `php jobs.php send-sms` (schedule it every 1–2 minutes) sends them. Retries with back-off (2, 4, 8, 16 min, max 5 attempts), `sms_opt_out` per user, duplicate protection, delivery reports. Drivers: `log` (default; refuses in production), `mock` (tests), `africastalking`. Messages carry no national IDs.
+- **MTN MoMo and Airtel Money payouts** (`app/Services/Payments`): set `finance.provider` to `momo` (routes by number prefix: 77/78/76/39 = MTN, 70/75/74/20 = Airtel) and enable each provider's block. Each attempt has its own reference, so a retry can never be mistaken for a duplicate and a repeated send can never pay twice. **A timeout or 5xx after sending leaves the payment "processing", never "failed"**, because the money may have moved; `php jobs.php poll-payments` (schedule it every few minutes) asks the provider and settles it. Cash payouts stay manual. The Airtel disbursement PIN is encrypted with Airtel's public key before sending.
+- **Callbacks** (`/webhooks/mtn/<token>`, `/webhooks/airtel/<token>`, `/webhooks/sms/<token>`): a callback is only a nudge. It never moves money; the app asks the provider and acts on that answer, so forged or replayed callbacks change nothing. Set `integrations.webhook_token` (24+ random characters) in `app.local.php`; without it all callback URLs answer 404. Rate-limited per IP; requests are logged without payloads.
+- **USSD** (`/ussd/<token>`, Africa's Talking format; set `integrations.ussd.enabled`): the picker is identified by the phone number the network reports. Menu: balance, last 3 collections, prices, request a payout. **There is no PIN**, so a payout request is capped (`payout_max_ugx`, default UGX 100,000), limited per day (3), made once per session, goes only to the registered phone, is audited, and still needs the normal approval by someone else.
+- **Not done in this phase:** collecting recycler invoice payments by prompting the recycler's phone (recycler payments are still recorded by staff and confirmed by a second person), and SMS for new marketplace offers. Migration `0021` adds `sms_outbox`, `webhook_log` and `users.sms_opt_out`.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -131,6 +141,8 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php tests/phase6_marketplace.php` | Run Phase 6 offer, negotiation, reservation, fulfilment, scoping and race tests |
 | `php tests/phase7_finance.php` | Run Phase 7 ledger, payout, payment, invoice, reconciliation and race tests |
 | `php tests/phase8_reports.php` | Run Phase 8 report-number, export-format, scoping, privacy, audit and performance tests |
+| `php tests/phase9_integrations.php` | Run Phase 9 SMS, MTN/Airtel, callback and USSD tests (starts a local fake provider server) |
+| `php jobs.php send-sms` | Send queued text messages |
 | `php jobs.php expire-orders` | Expire purchase-order negotiations that were not answered in time |
 | `php jobs.php poll-payments` / `generate-invoices` | Settle "processing" payments / invoice completed orders that have none |
 | `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price, collections, stock movements and orders |
@@ -180,7 +192,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 6. **Recycler marketplace** ✅
 7. **Financial management** ✅
 8. **Reports and analytics** ✅
-9. External integrations (SMS, USSD, MTN MoMo, Airtel Money; need provider credentials)
+9. **External integrations** (SMS, USSD, MTN MoMo, Airtel Money) ✅ built and tested against fakes; live credentials and sandbox runs still needed
 10. Geographic and programme monitoring
 11. Testing and deployment
 

@@ -44,7 +44,7 @@
           <?php if ($p['method'] === 'mobile_money'): ?><?= component('field', ['name' => 'provider_reference', 'label' => 'Mobile money transaction ID', 'required' => true, 'attrs' => ['autocomplete' => 'off']]) ?>
           <?php else: ?><?= component('field', ['name' => 'receipt_note', 'label' => 'Cash receipt note', 'required' => true]) ?><?php endif; ?>
         <?php endif; ?>
-        <button class="btn btn-primary" type="submit">Record payment</button>
+        <button class="btn btn-primary" type="submit"><?= $provider === 'manual' ? 'Record payment' : 'Send payment' ?></button>
       </form></div></div>
     <?php endif; ?>
     <?php if ($canConfirm): ?>

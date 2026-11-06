@@ -44,6 +44,7 @@ $cleanup = function () use ($pdo): void {
     $pdo->exec("DELETE FROM neighbourhoods WHERE name LIKE 'P3TEST%'");
     if ($ids) {
         $pdo->exec("DELETE FROM users WHERE id IN (" . implode(',', array_map('intval', $ids)) . ')');
+        $pdo->exec("DELETE FROM sms_outbox WHERE user_id IS NULL");
     }
 };
 $cleanup();

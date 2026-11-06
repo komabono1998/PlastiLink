@@ -155,7 +155,7 @@ final class PayoutService
             }
             PaymentRequest::decide($id, 'approved', (int) $actor['id'], $note !== '' ? mb_substr($note, 0, 255) : null);
             $payId = Payment::insert(['key' => 'payout-' . $id, 'direction' => 'out', 'picker' => (int) $q['picker_id'], 'request' => $id, 'amount' => (int) $q['amount_ugx'],
-                'method' => $q['method'], 'provider' => ProviderFactory::make()->name(), 'phone' => $q['destination_phone'], 'status' => 'pending', 'by' => (int) $actor['id']]);
+                'method' => $q['method'], 'provider' => ProviderFactory::forMethod((string) $q['method'])->name(), 'phone' => $q['destination_phone'], 'status' => 'pending', 'by' => (int) $actor['id']]);
             AuditLog::write('payout.approved', (int) $actor['id'], 'payout_request', $id, ['payment' => $payId, 'amount' => (int) $q['amount_ugx']]);
             return ['error' => null, 'message' => 'Payout approved. It is now waiting to be paid.'];
         });

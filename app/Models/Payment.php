@@ -152,6 +152,23 @@ final class Payment
         return $s->fetchAll();
     }
 
+    /** Find a payment from a provider's reference (an attempt's reference) or from our own payment reference (e.g. MTN's externalId). */
+    public static function idByAnyReference(string $ref): ?int
+    {
+        if ($ref === '' || strlen($ref) > 80) {
+            return null;
+        }
+        $pdo = Database::connection();
+        $s = $pdo->prepare('SELECT payment_id FROM payment_attempts WHERE provider_reference = ? ORDER BY id DESC LIMIT 1');
+        $s->execute([$ref]);
+        if ($id = $s->fetchColumn()) {
+            return (int) $id;
+        }
+        $s = $pdo->prepare("SELECT id FROM payments WHERE reference = ? AND direction = 'out'");
+        $s->execute([$ref]);
+        return ($id = $s->fetchColumn()) ? (int) $id : null;
+    }
+
     public static function lastAttempt(int $paymentId): ?array
     {
         $s = Database::connection()->prepare('SELECT * FROM payment_attempts WHERE payment_id = ? ORDER BY attempt_no DESC LIMIT 1');

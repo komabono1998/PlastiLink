@@ -129,6 +129,7 @@ final class PickerService
                 }
                 User::decide($uid, 'active', $by);
                 Picker::setReviewNote($pickerId, null);
+                SmsService::notifyRegistration('approved', User::findById($uid)['phone_e164'] ?? null, $uid);
                 $msg = 'Picker approved. They can now sign in.';
                 break;
             case 'reject':
@@ -140,6 +141,7 @@ final class PickerService
                 }
                 User::decide($uid, 'suspended', $by);
                 Picker::setReviewNote($pickerId, mb_substr($reason, 0, 500));
+                SmsService::notifyRegistration('rejected', User::findById($uid)['phone_e164'] ?? null, $uid);
                 $msg = 'Registration rejected.';
                 break;
             case 'suspend':

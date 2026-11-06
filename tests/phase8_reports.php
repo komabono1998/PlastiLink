@@ -53,6 +53,7 @@ $cleanup = function () use ($pdo): void {
     $pdo->exec("DELETE FROM collection_hubs WHERE id IN ($hub)");
     $pdo->exec("DELETE FROM login_attempts WHERE identifier LIKE '%phase8test%' OR identifier LIKE '%700055%'");
     $pdo->exec("DELETE FROM users WHERE id IN ($usr)");
+    $pdo->exec("DELETE FROM sms_outbox WHERE user_id IS NULL");
 };
 $cleanup();
 

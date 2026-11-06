@@ -145,6 +145,10 @@ final class PaymentService
         Payment::update($id, ['status' => 'successful', 'failure_reason' => null, 'processed_by' => $userId, 'processed_at' => gmdate('Y-m-d H:i:s')]);
         PaymentRequest::setStatus((int) $row['request_id'], 'paid');
         AuditLog::write('payment.successful', $userId, 'payment', $id, ['amount' => (int) $row['amount_ugx'], 'method' => $row['method']]);
+        $pk = \App\Models\Picker::find((int) $row['picker_id']);
+        if ($pk) {
+            SmsService::notifyPayoutPaid($row, \App\Models\User::findById((int) $pk['user_id'])['phone_e164'] ?? null, (int) $pk['user_id']);
+        }
         return ['error' => null, 'message' => 'Payment recorded as successful. The picker\'s balance has been reduced.'];
     }
 
@@ -153,30 +157,39 @@ final class PaymentService
     {
         $n = 0;
         foreach (Payment::processingIds() as $id) {
-            try {
-                $done = Database::transaction(function () use ($id): bool {
-                    $row = Payment::lock($id);
-                    if (!$row || $row['status'] !== 'processing') {
-                        return false;
-                    }
-                    $last = Payment::lastAttempt($id) ?? [];
-                    $r = ProviderFactory::make((string) $row['provider'])->status($row, $last);
-                    if ($r->status === 'processing') {
-                        return false;
-                    }
-                    LedgerEntry::lockAccount('picker', (int) $row['picker_id']);
-                    if ($r->status === 'successful' && LedgerService::balance('picker', (int) $row['picker_id']) < (int) $row['amount_ugx']) {
-                        $r = new ProviderResult('failed', $r->reference, "The picker's balance no longer covers this payment.");
-                    }
-                    self::applyResult($row, $r, null);
-                    return true;
-                });
-                $n += $done ? 1 : 0;
-            } catch (FinanceException) {
-                // leave it processing; staff can resolve it manually
-            }
+            $n += self::pollOne($id) ? 1 : 0;
         }
         return $n;
+    }
+
+    /**
+     * Ask the provider about ONE processing payment and apply the answer. Used by the poll job and by provider callbacks:
+     * a callback only says "look at payment X"; the answer always comes from asking the provider, never from the callback's body.
+     * @return bool true if the payment moved to successful or failed
+     */
+    public static function pollOne(int $id): bool
+    {
+        try {
+            return Database::transaction(function () use ($id): bool {
+                $row = Payment::lock($id);
+                if (!$row || $row['status'] !== 'processing') {
+                    return false;
+                }
+                $last = Payment::lastAttempt($id) ?? [];
+                $r = ProviderFactory::make((string) $row['provider'])->status($row, $last);
+                if ($r->status === 'processing') {
+                    return false;
+                }
+                LedgerEntry::lockAccount('picker', (int) $row['picker_id']);
+                if ($r->status === 'successful' && LedgerService::balance('picker', (int) $row['picker_id']) < (int) $row['amount_ugx']) {
+                    $r = new ProviderResult('failed', $r->reference, "The picker's balance no longer covers this payment.");
+                }
+                self::applyResult($row, $r, null);
+                return true;
+            });
+        } catch (FinanceException) {
+            return false;   // leave it processing; staff can resolve it manually
+        }
     }
 
     /** Reverse a successful payment (payout or recycler receipt). Needs authority and a reason; posts an opposite ledger entry. */

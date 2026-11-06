@@ -30,6 +30,7 @@ use App\Controllers\PickerController;
 use App\Controllers\RecyclerController;
 use App\Controllers\RegistrationController;
 use App\Controllers\ReportController;
+use App\Controllers\WebhookController;
 use App\Controllers\StyleguideController;
 use App\Controllers\UserController;
 use App\Middleware\AnyPermissionMiddleware;
@@ -188,6 +189,12 @@ $router->get('/statement', [InvoiceController::class, 'statement'], $viewInv);
 $router->get('/finance', [FinanceController::class, 'index'], [$auth, new PermissionMiddleware('finance.view')]);
 $router->get('/finance/reconciliation', [FinanceController::class, 'reconciliation'], [$auth, new PermissionMiddleware('payments.reconcile')]);
 $router->post('/finance/reconciliation', [FinanceController::class, 'reconcile'], [$auth, new PermissionMiddleware('payments.reconcile')]);
+
+// Provider callbacks and USSD: no session or CSRF; the secret token in the URL is the credential (see WebhookService)
+$router->post('/webhooks/mtn/{token}', [WebhookController::class, 'mtn']);
+$router->post('/webhooks/airtel/{token}', [WebhookController::class, 'airtel']);
+$router->post('/webhooks/sms/{token}', [WebhookController::class, 'sms']);
+$router->post('/ussd/{token}', [WebhookController::class, 'ussd']);
 
 // Reports and exports (ReportService decides which reports each role may open; Hub Managers only get their own hubs)
 $router->get('/reports', [ReportController::class, 'index'], [$auth, new PermissionMiddleware('reports.view')]);

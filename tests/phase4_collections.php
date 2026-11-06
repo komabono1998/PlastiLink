@@ -56,6 +56,7 @@ $cleanup = function () use ($pdo): void {
     $pdo->exec("DELETE FROM plastic_categories WHERE code = 'P4X'");
     $pdo->exec("DELETE FROM login_attempts WHERE identifier LIKE '%phase4test%' OR identifier LIKE '%700077%'");
     $pdo->exec("DELETE FROM users WHERE id IN ($userIn)");
+    $pdo->exec("DELETE FROM sms_outbox WHERE user_id IS NULL");
 };
 $cleanup();
 

@@ -255,6 +255,10 @@ final class CollectionService
                 LedgerService::post('picker', (int) $row['picker_id'], 'collection_earning', (int) $row['total_value_ugx'], 'collection', $id, $full['reference'], null, (int) $actor['id']);
             }
             AuditLog::write('collection.approved', (int) $actor['id'], 'collection', $id, ['total' => (int) $row['total_value_ugx']]);
+            $pk = \App\Models\Picker::find((int) $row['picker_id']);
+            if ($pk) {
+                SmsService::notifyCollectionApproved($full, \App\Models\User::findById((int) $pk['user_id'])['phone_e164'] ?? null, (int) $pk['user_id']);
+            }
             return ['error' => null, 'message' => 'Collection approved and receipt issued.'];
         });
     }
