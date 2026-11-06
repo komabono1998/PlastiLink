@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * PlastiLink scheduled jobs (CLI only). Run from a cron task / Windows Task Scheduler.
+ *
+ *   php jobs.php expire-orders     Expire purchase-order negotiations that were not answered in time
+ *
+ * (Expiry is also applied lazily whenever an order is opened, so this job is a safety net.)
+ */
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
+require __DIR__ . '/app/bootstrap.php';
+
+switch ($argv[1] ?? '') {
+    case 'expire-orders':
+        $n = App\Models\PurchaseOrder::expireStale();
+        echo "Expired $n negotiation(s).\n";
+        break;
+    default:
+        fwrite(STDERR, "Usage: php jobs.php expire-orders\n");
+        exit(1);
+}

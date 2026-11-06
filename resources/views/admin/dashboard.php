@@ -1,10 +1,10 @@
 <?php
 /** @var int $usersTotal @var int $usersActive @var int $usersPending @var int $usersSuspended
  *  @var int $pickersTotal @var int $pickersPending @var int $recyclersTotal @var int $recyclersPending @var int $hubsActive
- *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime @var array $stock @var int $transfersTransit @var int $adjustmentsPending */
+ *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime @var array $stock @var int $transfersTransit @var int $adjustmentsPending @var array $orderStats */
 $waiting = $pickersPending + $recyclersPending;
 ?>
-<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Marketplace and finance (Phases 6 and 7)']]) ?>
+<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Finance and payments (Phase 7)', 'Reports and analytics (Phase 8)']]) ?>
 
 <?php if ($waiting > 0 && can('pickers.manage', 'recyclers.approve')): ?>
   <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
@@ -28,6 +28,16 @@ $waiting = $pickersPending + $recyclersPending;
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'calendar-day', 'value' => format_kg($today['kg']), 'label' => 'Collected today', 'hint' => $today['recorded'] . ' recorded']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $allTime['pending'], 'label' => 'Collections awaiting approval']) ?></div>
 </div>
+
+<?php if (can('orders.review')): ?>
+<h2 class="h6 text-muted">Marketplace</h2>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><a class="text-decoration-none text-reset" href="<?= e(url('/orders?awaiting=1')) ?>"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $orderStats['awaiting'], 'label' => 'Purchase requests awaiting a response']) ?></a></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'truck', 'value' => (string) $orderStats['active'], 'label' => 'Orders being delivered']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'check2-circle', 'value' => (string) $orderStats['completed'], 'label' => 'Orders completed']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($orderStats['received_value']), 'label' => 'Value confirmed received', 'hint' => format_kg($orderStats['received_kg'])]) ?></div>
+</div>
+<?php endif; ?>
 
 <h2 class="h6 text-muted">Stock on hand</h2>
 <div class="row g-3 mb-4">

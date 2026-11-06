@@ -92,6 +92,9 @@ final class DispatchService
             if (!$row || $row['status'] !== 'dispatched') {
                 return ['error' => 'Only dispatched loads can be marked delivered.'];
             }
+            if (!empty($row['purchase_order_id'])) {
+                return ['error' => 'Loads sent against a purchase order are confirmed by the recycler, who enters the weight received.'];
+            }
             StockDispatch::markDelivered($id, (int) $actor['id'], $note !== '' ? mb_substr($note, 0, 255) : null);
             AuditLog::write('stock.dispatch_delivered', (int) $actor['id'], 'dispatch', $id);
             return ['error' => null, 'message' => 'Marked as delivered.'];
@@ -116,8 +119,10 @@ final class DispatchService
                 if (!$row || $row['status'] !== 'dispatched') {
                     return ['error' => 'Only loads that are still dispatched (not yet delivered) can be cancelled.'];
                 }
+                // A load sent against a purchase order goes back into that order's reservation (and the order's counters are rolled back).
+                $restoreReserved = !empty($row['purchase_order_id']) ? OrderService::onDispatchCancelled($row) : 0;
                 StockService::post('dispatch_return', (int) $row['hub_id'], (int) $row['plastic_category_id'], Weight::fromDecimal((string) $row['qty_kg']),
-                    0, 'dispatch', $id, StockDispatch::find($id)['reference'], 'Dispatch cancelled', (int) $actor['id']);
+                    $restoreReserved, 'dispatch', $id, StockDispatch::find($id)['reference'], 'Dispatch cancelled', (int) $actor['id']);
                 StockDispatch::markCancelled($id, (int) $actor['id'], mb_substr($reason, 0, 255));
                 AuditLog::write('stock.dispatch_cancelled', (int) $actor['id'], 'dispatch', $id, ['reason' => mb_substr($reason, 0, 200)]);
                 return ['error' => null, 'message' => 'Dispatch cancelled. The stock is back at the hub.'];

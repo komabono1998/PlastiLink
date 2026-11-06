@@ -10,6 +10,7 @@ use App\Models\Collection;
 use App\Models\Hub;
 use App\Models\LoginAttempt;
 use App\Models\Picker;
+use App\Models\PurchaseOrder;
 use App\Models\Recycler;
 use App\Models\StockAdjustment;
 use App\Models\StockBalance;
@@ -45,6 +46,7 @@ final class DashboardController extends Controller
             'today'          => Collection::summary(null, null, ...(Dates::dayRangeUtc(Dates::todayYmd()) ?? [null, null])),
             'allTime'        => Collection::summary(null, null),
             'stock'          => StockBalance::totals(null),
+            'orderStats'     => PurchaseOrder::stats('seller', null, null),
             'transfersTransit' => StockTransfer::pendingReceipts(null),
             'adjustmentsPending' => StockAdjustment::pendingCount(null),
             'byRole'         => User::countByRole(),
@@ -64,6 +66,7 @@ final class DashboardController extends Controller
             'today'          => Collection::summary($scope, null, ...(Dates::dayRangeUtc(Dates::todayYmd()) ?? [null, null])),
             'recent'         => Collection::paginate([], $scope, null, 0, 5),
             'stock'          => StockBalance::totals($scope),
+            'orderStats'     => PurchaseOrder::stats('seller', null, $scope),
             'transfersWaiting' => StockTransfer::pendingReceipts($scope),
             'adjustmentsPending' => StockAdjustment::pendingCount($scope),
         ]);
@@ -80,7 +83,15 @@ final class DashboardController extends Controller
 
     public function recycler(Request $request): string
     {
-        return $this->page($request, 'recyclers/dashboard', 'Recycler dashboard');
+        $user = AuthService::user();
+        PurchaseOrder::expireStale();
+        $rec = Recycler::findByUserId((int) $user['id']);
+        $rid = $rec ? (int) $rec['id'] : 0;
+        return $this->page($request, 'recyclers/dashboard', 'Recycler dashboard', [
+            'stats'  => PurchaseOrder::stats('recycler', $rid, null),
+            'recent' => PurchaseOrder::paginate([], $rid, null, 0, 6),
+            'available' => count(PurchaseOrder::available()),
+        ]);
     }
 
     /** Sidebar for the current user: only links that exist and that they may open. */
@@ -96,6 +107,8 @@ final class DashboardController extends Controller
             ['/users', 'people', 'Users', $can('users.view'), false],
             ['/pickers', 'person-badge', 'Waste pickers', $can('pickers.view'), false],
             ['/collections', 'box-seam', $user['role_slug'] === 'waste_picker' ? 'My collections' : 'Collections', $can('collections.view'), false],
+            ['/marketplace', 'shop-window', 'Marketplace', $user['role_slug'] === 'recycler' && $can('marketplace.browse'), false],
+            ['/orders', 'receipt-cutoff', $user['role_slug'] === 'recycler' ? 'My orders' : 'Purchase orders', $can('orders.manage', 'orders.review'), false],
             ['/inventory', 'boxes', 'Inventory', $can('inventory.view'), false],
             ['/prices', 'tag', 'Prices', $can('prices.view'), false],
             ['/hubs', 'shop', 'Collection hubs', $can('hubs.view'), false],

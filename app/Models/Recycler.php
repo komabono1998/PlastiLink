@@ -70,6 +70,13 @@ final class Recycler
         )->execute([$status, $byUserId, $reason, $id]);
     }
 
+    public static function findByUserId(int $userId): ?array
+    {
+        $s = Database::connection()->prepare(self::SELECT . ' WHERE r.user_id = ?');
+        $s->execute([$userId]);
+        return $s->fetch() ?: null;
+    }
+
     /** @return array<int,string> id => business name of approved recyclers whose login is active */
     public static function approvedOptions(): array
     {

@@ -1,7 +1,7 @@
-<?php /** @var array $myHubs @var int $pickersTotal @var int $pickersPending @var array $today @var array $recent @var array $stock @var int $transfersWaiting @var int $adjustmentsPending */ ?>
+<?php /** @var array $myHubs @var int $pickersTotal @var int $pickersPending @var array $today @var array $recent @var array $stock @var int $transfersWaiting @var int $adjustmentsPending @var array $orderStats */ ?>
 <?= component('welcome', [
     'user' => auth_user(), 'blurb' => 'Hub operations',
-    'coming' => ['Recycler marketplace and purchase orders (Phase 6)'],
+    'coming' => ['Invoices and payments (Phase 7)'],
 ]) ?>
 
 <div class="d-flex flex-wrap gap-2 mt-1 mb-3">
@@ -16,6 +16,13 @@
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($today['value']), 'label' => 'Approved value today']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $today['pending'], 'label' => 'Waiting for approval', 'hint' => $pickersPending . ' pickers pending']) ?></div>
 </div>
+
+<?php if (can('orders.review') && ($orderStats['awaiting'] > 0 || $orderStats['active'] > 0)): ?>
+  <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+    <span><i class="bi bi-receipt-cutoff"></i> <strong><?= e($orderStats['awaiting']) ?></strong> purchase request<?= $orderStats['awaiting'] === 1 ? '' : 's' ?> waiting for your response · <strong><?= e($orderStats['active']) ?></strong> order<?= $orderStats['active'] === 1 ? '' : 's' ?> to deliver.</span>
+    <a class="btn btn-sm btn-primary" href="<?= e(url('/orders')) ?>">Open orders</a>
+  </div>
+<?php endif; ?>
 
 <h2 class="h6 text-muted">Stock at my hubs</h2>
 <div class="row g-3 mb-4">

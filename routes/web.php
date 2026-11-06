@@ -11,6 +11,8 @@ use App\Controllers\AdjustmentController;
 use App\Controllers\CollectionController;
 use App\Controllers\DispatchController;
 use App\Controllers\InventoryController;
+use App\Controllers\MarketplaceController;
+use App\Controllers\OrderController;
 use App\Controllers\TransferController;
 use App\Controllers\PriceController;
 use App\Controllers\ReceiptController;
@@ -137,6 +139,18 @@ $router->get('/inventory/adjustments/new', [AdjustmentController::class, 'create
 $router->post('/inventory/adjustments', [AdjustmentController::class, 'store'], $manageInv);
 $router->get('/inventory/adjustments/{id:\d+}', [AdjustmentController::class, 'show'], $viewInv);
 $router->post('/inventory/adjustments/{id:\d+}/decision', [AdjustmentController::class, 'decide'], [$auth, new PermissionMiddleware('inventory.approve')]);
+
+// Marketplace and purchase orders (OrderService decides which side the user is on; the routes only require "some marketplace permission")
+$router->get('/marketplace', [MarketplaceController::class, 'index'], [$auth, new PermissionMiddleware('marketplace.browse')]);
+$anyOrder = [$auth, new AnyPermissionMiddleware('orders.manage', 'orders.review')];
+$router->get('/orders', [OrderController::class, 'index'], $anyOrder);
+$router->get('/orders/new', [OrderController::class, 'create'], [$auth, new PermissionMiddleware('orders.manage')]);
+$router->post('/orders', [OrderController::class, 'store'], [$auth, new PermissionMiddleware('orders.manage')]);
+$router->get('/orders/{id:\d+}', [OrderController::class, 'show'], $anyOrder);
+foreach (['counter' => 'counter', 'accept' => 'accept', 'end' => 'end', 'schedule' => 'schedule', 'cancel' => 'cancel', 'close' => 'close', 'dispatch' => 'dispatch'] as $path => $method) {
+    $router->post('/orders/{id:\d+}/' . $path, [OrderController::class, $method], $anyOrder);
+}
+$router->post('/orders/{id:\d+}/receive/{did:\d+}', [OrderController::class, 'receive'], $anyOrder);
 
 // Recyclers
 $anyRecycler = [$auth, new AnyPermissionMiddleware('recyclers.approve', 'recyclers.manage')];

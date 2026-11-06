@@ -4,7 +4,7 @@
 
 **Stack:** PHP 8.2+ (custom MVC, no framework) · PDO · MySQL/MariaDB · Bootstrap 5 · Bootstrap Icons · Chart.js. No Composer or Node needed.
 
-**Status:** Phases 1 (foundation), 2 (authentication and RBAC), 3 (administration and registrations), 4 (collection hub operations) and 5 (inventory) complete. See "Roadmap".
+**Status:** Phases 1 to 6 complete (foundation, authentication and RBAC, administration and registrations, collection hub operations, inventory, recycler marketplace). See "Roadmap".
 
 ## Local setup (Windows + XAMPP)
 
@@ -80,6 +80,18 @@ Passwords are random and printed once in your terminal; they are never stored in
 - `php seed.php demo-data` also adds a DEMO dispatch, a DEMO transfer waiting to be received and a DEMO count waiting for approval.
 - Asset URLs now carry a version stamp (`?v=`), so browsers pick up CSS/JS changes after a deploy.
 
+### Recycler marketplace (Phase 6)
+
+- **Screens:** `/marketplace` (recyclers: plastic available now = on hand minus reserved), `/orders` (list; recyclers see their own, hub staff their hubs, administrators all), `/orders/new`, `/orders/{id}`.
+- **Flow:** the recycler makes an offer (hub, material, kg, price per kg, optional date) → the hub **accepts, counters or rejects**; each side can counter the other's latest offer (max **6 rounds**, each offer valid **72 hours**, then it expires) → **accepting locks the terms and reserves the agreed kg** in the hub's stock (using the Phase 5 reservation logic) → the hub schedules a delivery date and **dispatches** (part or all) against the order → the recycler **confirms the weight received** for each load → the order completes when everything agreed is dispatched and confirmed. If the rest will not be delivered, the hub **closes the order short** (releasing the remaining reservation). A confirmed order with nothing dispatched can be cancelled by either side.
+- **No overselling:** the reservation happens inside the accept transaction under a row lock, so two recyclers cannot be promised the same plastic (tested with two simultaneous requests). Requests above the currently available quantity are refused.
+- **Money:** totals are whole UGX with integer arithmetic. The agreed price and the recycler's *confirmed received* kg are stored on the order item; Phase 7 will invoice from them. No payment happens in this phase.
+- **Who may do what:** `orders.manage` (recyclers, own orders) and `orders.review` (Super Administrator, Project Manager, Hub Manager at that hub). `OrderService::sideOf()` decides which side a user is on, so an administrator can never act as the recycler. A Hub Operator has no access to orders. Dispatching also needs `inventory.manage`.
+- **Order dispatches** are confirmed by the recycler (the hub cannot mark them delivered). Cancelling a load from the inventory screen returns the stock *and* the reservation and rolls the order back.
+- **Expiry:** applied whenever an order is opened, and by `php jobs.php expire-orders` (schedule it with cron or Windows Task Scheduler; on Hostinger use a cron job).
+- Not in this phase: editing a recycler's company profile and material requirements, and notifications (SMS/email arrive in Phase 9; for now dashboards show what is waiting).
+- `php seed.php demo-data` also adds a DEMO order being delivered (one load waiting for the recycler to confirm) and a DEMO request waiting for the hub.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -92,7 +104,9 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php tests/phase3_admin.php` | Run Phase 3 administration, registration, approval and hub-scoping tests |
 | `php tests/phase4_collections.php` | Run Phase 4 price, collection, approval, receipt and scoping tests |
 | `php tests/phase5_inventory.php` | Run Phase 5 ledger, transfer, dispatch, adjustment, reservation and race tests |
-| `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price, collections and stock movements |
+| `php tests/phase6_marketplace.php` | Run Phase 6 offer, negotiation, reservation, fulfilment, scoping and race tests |
+| `php jobs.php expire-orders` | Expire purchase-order negotiations that were not answered in time |
+| `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price, collections, stock movements and orders |
 
 `/styleguide` shows the shared design system. It is only registered when `app.env` is not `production`.
 
@@ -136,7 +150,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 3. **Administration and user management** ✅
 4. **Collection hub operations** ✅
 5. **Inventory** ✅
-6. Recycler marketplace
+6. **Recycler marketplace** ✅
 7. Financial management
 8. Reports and analytics
 9. External integrations (SMS, USSD, MTN MoMo, Airtel Money; need provider credentials)

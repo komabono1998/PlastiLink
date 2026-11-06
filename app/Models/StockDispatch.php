@@ -69,9 +69,9 @@ final class StockDispatch
     {
         $pdo = Database::connection();
         $pdo->prepare(
-            'INSERT INTO stock_dispatches (submission_token, hub_id, recycler_id, plastic_category_id, qty_kg, vehicle, driver, notes, dispatched_by, dispatched_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())'
-        )->execute([$d['token'], $d['hub'], $d['recycler'], $d['cat'], $d['qty'], $d['vehicle'], $d['driver'], $d['notes'], $d['by']]);
+            'INSERT INTO stock_dispatches (submission_token, hub_id, recycler_id, purchase_order_id, plastic_category_id, qty_kg, vehicle, driver, notes, dispatched_by, dispatched_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())'
+        )->execute([$d['token'], $d['hub'], $d['recycler'], $d['order'] ?? null, $d['cat'], $d['qty'], $d['vehicle'], $d['driver'], $d['notes'], $d['by']]);
         $id = (int) $pdo->lastInsertId();
         $pdo->prepare('UPDATE stock_dispatches SET reference = ? WHERE id = ?')->execute([Reference::make('DSP', $id), $id]);
         return $id;
@@ -82,6 +82,22 @@ final class StockDispatch
         Database::connection()->prepare(
             "UPDATE stock_dispatches SET status = 'delivered', delivered_by = ?, delivered_at = UTC_TIMESTAMP(), delivery_note = ? WHERE id = ?"
         )->execute([$by, $note, $id]);
+    }
+
+    /** The recycler confirms the weight that actually arrived for an order dispatch. */
+    public static function markReceived(int $id, int $by, string $qty, ?string $note): void
+    {
+        Database::connection()->prepare(
+            "UPDATE stock_dispatches SET status = 'delivered', delivered_by = ?, delivered_at = UTC_TIMESTAMP(), received_kg = ?, receive_note = ? WHERE id = ?"
+        )->execute([$by, $qty, $note, $id]);
+    }
+
+    /** @return array<int,array> dispatches made against an order, oldest first */
+    public static function forOrder(int $orderId): array
+    {
+        $s = Database::connection()->prepare(self::SELECT . ' WHERE d.purchase_order_id = ? ORDER BY d.id');
+        $s->execute([$orderId]);
+        return $s->fetchAll();
     }
 
     public static function markCancelled(int $id, int $by, string $reason): void

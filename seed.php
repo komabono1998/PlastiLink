@@ -122,6 +122,21 @@ if ($command === 'demo-data') {
         App\Services\AdjustmentService::request(['token' => md5('demo-adjustment-1'), 'kind' => 'count', 'hub_id' => $hubIds[0], 'plastic_category_id' => $petId,
             'quantity_kg' => '40', 'reason' => 'DEMO physical count (waiting for approval)'], $mgr);
     }
+    // Demo marketplace: one order being delivered (a load waiting for the recycler to confirm) and one request waiting for the hub.
+    $recUser = $uid('email', 'demo.recycler@example.test');
+    if ($recUser && $mgrId && $petId && !empty($mgr)) {
+        $rec = App\Services\OrderService::class;
+        $recActor = App\Models\User::findById($recUser);
+        $o1 = $rec::create(['token' => md5('demo-order-1'), 'hub_id' => $hubIds[0], 'plastic_category_id' => $petId, 'quantity_kg' => '10',
+            'price_per_kg_ugx' => '1200', 'note' => 'DEMO offer'], $recActor);
+        if (!empty($o1['id']) && empty($o1['duplicate'])) {
+            $rec::counter((int) $o1['id'], ['quantity_kg' => '10', 'price_per_kg_ugx' => '1300', 'note' => 'DEMO counter-offer'], $mgr);
+            $rec::accept((int) $o1['id'], $recActor);
+            $rec::dispatch((int) $o1['id'], ['token' => md5('demo-order-1-load'), 'quantity_kg' => '4', 'vehicle' => 'DEMO UAA 001B', 'driver' => 'DEMO Driver'], $mgr);
+        }
+        $rec::create(['token' => md5('demo-order-2'), 'hub_id' => $hubIds[0], 'plastic_category_id' => $petId, 'quantity_kg' => '5',
+            'price_per_kg_ugx' => '1100', 'note' => 'DEMO offer waiting for the hub'], $recActor);
+    }
     echo "Demo hubs, pickers, recyclers, a DEMO price and collections are in place (all labelled DEMO). Run 'demo-users' first for sign-in accounts.\n";
     exit(0);
 }

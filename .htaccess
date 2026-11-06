@@ -9,7 +9,7 @@ Options -Indexes
 
     # Never serve application internals or tooling
     RewriteRule ^(app|config|database|storage|resources|routes|tests)(/|$) - [F,L]
-    RewriteRule ^(migrate\.php|seed\.php|README\.md|\.git.*|composer\..*)$ - [F,L]
+    RewriteRule ^(migrate\.php|seed\.php|jobs\.php|README\.md|\.git.*|composer\..*)$ - [F,L]
 
     # Everything else is served from /public
     RewriteRule ^$ public/ [L]
