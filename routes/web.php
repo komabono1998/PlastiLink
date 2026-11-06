@@ -29,6 +29,7 @@ use App\Controllers\NeighbourhoodController;
 use App\Controllers\PickerController;
 use App\Controllers\RecyclerController;
 use App\Controllers\RegistrationController;
+use App\Controllers\ReportController;
 use App\Controllers\StyleguideController;
 use App\Controllers\UserController;
 use App\Middleware\AnyPermissionMiddleware;
@@ -187,6 +188,11 @@ $router->get('/statement', [InvoiceController::class, 'statement'], $viewInv);
 $router->get('/finance', [FinanceController::class, 'index'], [$auth, new PermissionMiddleware('finance.view')]);
 $router->get('/finance/reconciliation', [FinanceController::class, 'reconciliation'], [$auth, new PermissionMiddleware('payments.reconcile')]);
 $router->post('/finance/reconciliation', [FinanceController::class, 'reconcile'], [$auth, new PermissionMiddleware('payments.reconcile')]);
+
+// Reports and exports (ReportService decides which reports each role may open; Hub Managers only get their own hubs)
+$router->get('/reports', [ReportController::class, 'index'], [$auth, new PermissionMiddleware('reports.view')]);
+$router->get('/reports/{key:[a-z]+}', [ReportController::class, 'show'], [$auth, new PermissionMiddleware('reports.view')]);
+$router->get('/reports/{key:[a-z]+}/export/{format:csv|xlsx|pdf}', [ReportController::class, 'export'], [$auth, new PermissionMiddleware('reports.view', 'reports.export')]);
 
 // Recyclers
 $anyRecycler = [$auth, new AnyPermissionMiddleware('recyclers.approve', 'recyclers.manage')];

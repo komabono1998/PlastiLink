@@ -106,6 +106,16 @@ Passwords are random and printed once in your terminal; they are never stored in
 - **Back-fill:** migration `0019` credits pickers for collections approved before Phase 7 (safe to re-run).
 - `php seed.php demo-data` now also leaves: a DEMO order that was delivered, closed short and invoiced (UGX 5,200); a DEMO cash payout taken through request, approval and payment; a DEMO mobile-money payout waiting for approval; and a DEMO recycler payment waiting for a second person to confirm.
 
+### Reports and analytics (Phase 8)
+
+- **Eight reports at `/reports`:** collections (by day/week/month, hub, neighbourhood), picker performance (with a "quiet pickers" list), hub performance (approval time, rejection rate, stock, dispatches, losses), inventory (balances plus opening + movements = closing reconciliation), recycler purchasing, financial, payments, and environmental/programme impact. Every number is calculated from the recorded data at the moment you open the report; nothing is hard-coded.
+- **Exports:** CSV, Excel (.xlsx) and PDF, written by the app itself (`app/Services/Exports`, no libraries). CSV has a UTF-8 BOM and neutralises cells that start with `= + - @`. Exports are capped at 50,000 rows per table; screens show the first 500. Every export is recorded in the audit trail (`report.exported`: who, which report, format, filters, row count).
+- **Who sees what:** Super Administrators and Project Managers open and export all reports. Hub Managers get collections, picker performance, hub performance and inventory, always limited to their own hubs (a different `hub_id` in the URL is ignored). Hub Operators, pickers and recyclers have no access (HTTP 403). Reports and exports never contain national IDs or phone numbers.
+- **Dates** are East Africa Time days (UTC+3) over UTC-stored timestamps. Ranges are validated (reversed ranges are swapped, ranges over 5 years are trimmed).
+- **Impact figures** are measured only (kg, people, UGX). Bottle counts and CO2e savings stay **off** unless you set `impact.bottles_per_kg`, `impact.co2e_kg_per_kg` and a `impact.source` in `config/app.php`; no invented conversion factors ship with the app.
+- **Charts** load Chart.js only when someone clicks "Show chart".
+- Migration `0020` adds the `reports.export` permission and report indexes.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -120,6 +130,7 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php tests/phase5_inventory.php` | Run Phase 5 ledger, transfer, dispatch, adjustment, reservation and race tests |
 | `php tests/phase6_marketplace.php` | Run Phase 6 offer, negotiation, reservation, fulfilment, scoping and race tests |
 | `php tests/phase7_finance.php` | Run Phase 7 ledger, payout, payment, invoice, reconciliation and race tests |
+| `php tests/phase8_reports.php` | Run Phase 8 report-number, export-format, scoping, privacy, audit and performance tests |
 | `php jobs.php expire-orders` | Expire purchase-order negotiations that were not answered in time |
 | `php jobs.php poll-payments` / `generate-invoices` | Settle "processing" payments / invoice completed orders that have none |
 | `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price, collections, stock movements and orders |
@@ -168,7 +179,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 5. **Inventory** ✅
 6. **Recycler marketplace** ✅
 7. **Financial management** ✅
-8. Reports and analytics
+8. **Reports and analytics** ✅
 9. External integrations (SMS, USSD, MTN MoMo, Airtel Money; need provider credentials)
 10. Geographic and programme monitoring
 11. Testing and deployment

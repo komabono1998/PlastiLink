@@ -105,6 +105,38 @@
     update();
   }
 
+  // Report charts: Chart.js (about 200 KB) is downloaded only when someone asks to see the chart.
+  var chartBtn = document.querySelector('[data-chart-toggle]');
+  if (chartBtn) {
+    var panel = document.getElementById('chart-panel');
+    var palette = ['#086B52', '#16A085', '#F0B44D', '#202C28'];
+    var draw = function () {
+      var cfg = JSON.parse(panel.dataset.chart);
+      new window.Chart(panel.querySelector('canvas'), {
+        type: cfg.type,
+        data: {
+          labels: cfg.labels,
+          datasets: cfg.datasets.map(function (d, i) {
+            return Object.assign({ backgroundColor: palette[i % 4], borderColor: palette[i % 4], borderWidth: cfg.type === 'line' ? 2 : 0, tension: 0.25 }, d);
+          })
+        },
+        options: { responsive: true, plugins: { title: { display: true, text: cfg.title }, legend: { display: cfg.datasets.length > 1 } }, scales: { y: { beginAtZero: true } } }
+      });
+      panel.dataset.drawn = '1';
+    };
+    chartBtn.addEventListener('click', function () {
+      if (!panel.hidden) { panel.hidden = true; chartBtn.lastChild.textContent = ' Show chart'; return; }
+      panel.hidden = false;
+      chartBtn.lastChild.textContent = ' Hide chart';
+      if (panel.dataset.drawn) return;
+      if (window.Chart) { draw(); return; }
+      var s = document.createElement('script');
+      s.src = chartBtn.dataset.src;
+      s.onload = draw;
+      document.head.appendChild(s);
+    });
+  }
+
   // Loading state on forms: prevents double submission
   document.querySelectorAll('form[data-loading]').forEach(function (form) {
     form.addEventListener('submit', function () {

@@ -28,6 +28,13 @@ return [
         'payout_max_ugx'     => 5000000,     // largest single payout request
         'invoice_terms_days' => 14,          // days from issue to due date
     ],
+    // Optional impact conversions. LEFT EMPTY on purpose: PlastiLink never invents statistics.
+    // Fill these in ONLY with factors approved by the programme or a partner, and state the source.
+    'impact'   => [
+        'bottles_per_kg'  => null,   // e.g. number of PET bottles in 1 kg (use your own measured or published figure)
+        'co2e_kg_per_kg'  => null,   // kg CO2-equivalent avoided per kg of PET recycled (cite the study)
+        'source'          => '',     // where the factors come from; printed on the report next to the figures
+    ],
     'session'  => [
         'name'     => 'plastilink_session',
         'lifetime' => 7200,              // seconds of inactivity

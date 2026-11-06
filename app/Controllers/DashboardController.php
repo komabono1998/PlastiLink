@@ -121,6 +121,7 @@ final class DashboardController extends Controller
             ['/payments', 'credit-card', 'Payments', $can('payments.view', 'invoices.view') && $user['role_slug'] !== 'waste_picker', false],
             ['/invoices', 'file-earmark-text', 'Invoices', $can('invoices.view'), false],
             ['/statement', 'journal-richtext', 'Account statement', $user['role_slug'] === 'recycler', false],
+            ['/reports', 'file-earmark-bar-graph', 'Reports', $can('reports.view'), false],
             ['/finance', 'graph-up-arrow', 'Finance', $can('finance.view'), true],
             ['/finance/reconciliation', 'check2-square', 'Reconciliation', $can('payments.reconcile'), false],
             ['/inventory', 'boxes', 'Inventory', $can('inventory.view'), false],
