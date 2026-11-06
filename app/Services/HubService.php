@@ -33,7 +33,7 @@ final class HubService
         }
         $lat = trim((string) ($in['latitude'] ?? ''));
         $lng = trim((string) ($in['longitude'] ?? ''));
-        if (($lat === '') !== ($lng === '') && !isset($errors['latitude'], $errors['longitude'])) {
+        if (($lat === '') !== ($lng === '') && !isset($errors['latitude']) && !isset($errors['longitude'])) {
             $errors['latitude'] = 'Enter both latitude and longitude, or leave both empty.';
         }
         if ($errors) {

@@ -1,5 +1,27 @@
-<?= component('welcome', [
-    'user' => auth_user(),
-    'blurb' => 'Your collections and earnings will appear here.',
-    'coming' => ['Collection history', 'Earnings and digital receipts', 'Income statements'],
-]) ?>
+<?php /** @var array $summary @var array $recent */ ?>
+<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Your collections and receipts', 'coming' => ['Mobile money payments and income statements (Phase 7)']]) ?>
+
+<div class="row g-3 mt-1 mb-4">
+  <div class="col-6"><?= component('stat-card', ['icon' => 'box-seam', 'value' => format_kg($summary['kg']), 'label' => 'Approved plastic delivered']) ?></div>
+  <div class="col-6"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($summary['value']), 'label' => 'Value of approved collections', 'hint' => 'Not yet paid']) ?></div>
+</div>
+
+<div class="card"><div class="card-body pb-0 d-flex justify-content-between"><h2 class="h6">Latest collections</h2>
+  <a href="<?= e(url('/collections')) ?>">See all</a></div>
+  <?php if (!$recent): ?>
+    <?= component('empty-state', ['icon' => 'box-seam', 'title' => 'No collections yet', 'text' => 'Take your plastic to a PlastiLink hub. It will be weighed and shown here.']) ?>
+  <?php else: ?>
+  <div class="table-responsive"><table class="table align-middle mb-0">
+    <thead><tr><th>Date</th><th class="text-end">Weight</th><th class="text-end">Value</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    <?php foreach ($recent as $c): ?>
+      <tr><td class="small text-nowrap"><?= e(format_datetime($c['recorded_at'], 'd M, H:i')) ?></td>
+        <td class="text-end text-nowrap"><?= e(format_kg($c['net_weight_kg'])) ?></td>
+        <td class="text-end text-nowrap"><?= e(format_ugx($c['total_value_ugx'])) ?></td>
+        <td><?= component('status-badge', ['status' => $c['status']]) ?></td>
+        <td class="text-end"><?= $c['receipt_id'] ? '<a href="' . e(url('/receipts/' . $c['receipt_id'])) . '">Receipt</a>' : '' ?></td></tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+  <?php endif; ?>
+</div>

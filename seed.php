@@ -83,7 +83,34 @@ if ($command === 'demo-data') {
         App\Models\Recycler::create(['user_id' => $id, 'business_name' => 'DEMO Pending Plastics Co', 'registration_number' => null,
             'contact_person' => 'DEMO Pending Contact', 'address' => 'Demo address, Gulu', 'materials' => 'PET bottles', 'status' => 'pending']);
     }
-    echo "Demo hubs, pickers and recyclers are in place (all labelled DEMO). Run 'demo-users' first for sign-in accounts.\n";
+    // Demo price + collections (deterministic tokens make this idempotent). The price is a DEMO value, not a real price.
+    $saId = $uid('email', 'demo.superadmin@example.test');
+    $petId = (int) $pdo->query("SELECT id FROM plastic_categories WHERE code = 'PET'")->fetchColumn();
+    if ($saId && $petId && !App\Models\Price::current($petId, null)) {
+        App\Models\Price::create($petId, null, 1000, 'DEMO price (not a real price)', $saId);
+    }
+    $opId = $uid('email', 'demo.hubop@example.test');
+    $mgrId = $uid('email', 'demo.hubmanager@example.test');
+    if ($opId && $mgrId && $petId) {
+        $op = App\Models\User::findById($opId);
+        $mgr = App\Models\User::findById($mgrId);
+        $demoPickers = $pdo->query("SELECT p.id FROM pickers p JOIN users u ON u.id = p.user_id
+                                    WHERE u.status = 'active' AND p.preferred_hub_id = {$hubIds[0]} ORDER BY p.id")->fetchAll(PDO::FETCH_COLUMN);
+        $weights = [['12.5', '0.5'], ['8', ''], ['20.25', '1'], ['5.5', '0.25'], ['15', '0.5'], ['9.75', '0.75'], ['30', '2'], ['4.2', '']];
+        foreach ($weights as $i => [$gross, $tare]) {
+            if (!$demoPickers) {
+                break;
+            }
+            $res = App\Services\CollectionService::record([
+                'token' => md5('demo-collection-' . $i), 'picker_id' => $demoPickers[$i % count($demoPickers)], 'hub_id' => $hubIds[0],
+                'plastic_category_id' => $petId, 'gross_weight_kg' => $gross, 'tare_weight_kg' => $tare, 'notes' => 'DEMO collection',
+            ], $op);
+            if (!empty($res['id']) && empty($res['duplicate']) && $i < 6) {
+                App\Services\CollectionService::approve($res['id'], $mgr);   // the last two stay pending
+            }
+        }
+    }
+    echo "Demo hubs, pickers, recyclers, a DEMO price and collections are in place (all labelled DEMO). Run 'demo-users' first for sign-in accounts.\n";
     exit(0);
 }
 

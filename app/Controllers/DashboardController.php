@@ -5,6 +5,8 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Helpers\Dates;
+use App\Models\Collection;
 use App\Models\Hub;
 use App\Models\LoginAttempt;
 use App\Models\Picker;
@@ -37,6 +39,8 @@ final class DashboardController extends Controller
             'recyclersTotal' => array_sum($recyclers),
             'recyclersPending' => $recyclers['pending'] ?? 0,
             'hubsActive'     => $hubs['active'] ?? 0,
+            'today'          => Collection::summary(null, null, ...(Dates::dayRangeUtc(Dates::todayYmd()) ?? [null, null])),
+            'allTime'        => Collection::summary(null, null),
             'byRole'         => User::countByRole(),
             'failed24h'      => LoginAttempt::failedSince('24 HOUR'),
             'recentLogins'   => LoginAttempt::recentSuccessful(5),
@@ -51,12 +55,18 @@ final class DashboardController extends Controller
             'myHubs'         => Hub::list($scope),
             'pickersTotal'   => array_sum($pickers),
             'pickersPending' => $pickers['pending'] ?? 0,
+            'today'          => Collection::summary($scope, null, ...(Dates::dayRangeUtc(Dates::todayYmd()) ?? [null, null])),
+            'recent'         => Collection::paginate([], $scope, null, 0, 5),
         ]);
     }
 
     public function picker(Request $request): string
     {
-        return $this->page($request, 'picker/dashboard', 'My dashboard');
+        $user = AuthService::user();
+        return $this->page($request, 'picker/dashboard', 'My dashboard', [
+            'summary' => Collection::summary(null, (int) $user['id']),
+            'recent'  => Collection::paginate([], null, (int) $user['id'], 0, 5),
+        ]);
     }
 
     public function recycler(Request $request): string
@@ -76,6 +86,8 @@ final class DashboardController extends Controller
             ['/approvals', 'patch-check', 'Approvals', $can('pickers.manage', 'recyclers.approve'), false],
             ['/users', 'people', 'Users', $can('users.view'), false],
             ['/pickers', 'person-badge', 'Waste pickers', $can('pickers.view'), false],
+            ['/collections', 'box-seam', $user['role_slug'] === 'waste_picker' ? 'My collections' : 'Collections', $can('collections.view'), false],
+            ['/prices', 'tag', 'Prices', $can('prices.view'), false],
             ['/hubs', 'shop', 'Collection hubs', $can('hubs.view'), false],
             ['/recyclers', 'building', 'Recyclers', $can('recyclers.approve', 'recyclers.manage'), false],
             ['/neighbourhoods', 'geo-alt', 'Neighbourhoods', $can('neighbourhoods.manage'), false],

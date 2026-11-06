@@ -33,6 +33,20 @@ final class PickerController extends Controller
         ]);
     }
 
+    /** JSON search used by the "record a collection" form: active pickers this user may see. No full phone numbers. */
+    public function search(Request $request): array
+    {
+        $q = trim((string) ($request->query['q'] ?? ''));
+        if (mb_strlen($q) < 2) {
+            return ['results' => []];
+        }
+        $scope = HubScope::forUser(AuthService::user());
+        return ['results' => array_map(static fn(array $p) => [
+            'id' => (int) $p['id'], 'code' => $p['picker_code'], 'name' => $p['full_name'],
+            'neighbourhood' => $p['neighbourhood'], 'hub' => $p['hub_name'], 'phone' => \App\Helpers\Phone::mask($p['phone_e164']),
+        ], Picker::search($q, $scope, 8))];
+    }
+
     public function create(Request $request): string
     {
         $scope = HubScope::forUser(AuthService::user());

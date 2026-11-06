@@ -4,7 +4,7 @@
 
 **Stack:** PHP 8.2+ (custom MVC, no framework) · PDO · MySQL/MariaDB · Bootstrap 5 · Bootstrap Icons · Chart.js. No Composer or Node needed.
 
-**Status:** Phases 1 (foundation), 2 (authentication and RBAC) and 3 (administration and registrations) complete. See "Roadmap".
+**Status:** Phases 1 (foundation), 2 (authentication and RBAC), 3 (administration and registrations) and 4 (collection hub operations) complete. See "Roadmap".
 
 ## Local setup (Windows + XAMPP)
 
@@ -56,6 +56,17 @@ Passwords are random and printed once in your terminal; they are never stored in
 - **Picker IDs** look like `PLP-000123`; hub codes like `HUB-001`.
 - **Demo hubs, pickers and recyclers** (labelled DEMO, local/staging only): `C:\xampp\php\php.exe seed.php demo-data` (run `demo-users` first). Safe to re-run.
 
+### Collections, prices and receipts (Phase 4)
+
+- **Screens:** `/collections` (list; pickers see only their own as "My collections"), `/collections/new` (record and weigh), `/collections/{id}`, `/receipts/{id}` (printable), `/prices`.
+- **Prices:** one national price per material with an optional per-hub override, set by Super Administrators and Project Managers. Prices are append-only history: a change adds a row and never edits or deletes one. **No real prices are seeded**; set them on `/prices` before recording collections. (The local `demo-data` seeder adds one clearly labelled DEMO price.)
+- **Arithmetic:** weights are held as hundredths of a kg and money as whole UGX, using integer maths only (`App\Helpers\Weight`). Net = gross − tare; value = net × price per kg, rounded half-up. The price is copied onto the collection when it is weighed, so later price changes never alter it.
+- **Workflow:** `pending` → `approved` | `rejected`, and `approved` → `reversed`. The person who recorded a collection can never approve it (this includes Super Administrators). Approved records are locked; reversal needs `collections.reverse` (Super Administrator, Project Manager) and a reason, and voids the receipt. Nothing is deleted. Re-weighing a pending collection keeps every earlier weighing.
+- **Duplicate protection:** each form carries a one-time token with a unique database constraint, so a double click or refresh cannot record a delivery twice.
+- **References:** `COL-YYYYMMDD-######` for collections, `RCT-YYYYMMDD-######` for receipts. A receipt keeps its own snapshot (no phone number or national ID) so later edits never change it.
+- **Stock and payments:** approving a collection does not yet change stock (Phase 5 builds the stock ledger and back-fills it from approved collections) or pay anyone (Phase 7). Picker pages label the value "not yet paid".
+- `php seed.php demo-data` now also adds a DEMO price and 8 DEMO collections (6 approved, 2 pending).
+
 ### Useful commands
 
 | Command | Purpose |
@@ -66,7 +77,8 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php tests/phase1_smoke.php` | Run Phase 1 tests (needs Apache running) |
 | `php tests/phase2_auth.php` | Run Phase 2 auth/RBAC tests (creates and removes temporary test users) |
 | `php tests/phase3_admin.php` | Run Phase 3 administration, registration, approval and hub-scoping tests |
-| `php seed.php demo-data` | Create labelled demo hubs, pickers and recyclers |
+| `php tests/phase4_collections.php` | Run Phase 4 price, collection, approval, receipt and scoping tests |
+| `php seed.php demo-data` | Create labelled demo hubs, pickers, recyclers, a price and collections |
 
 `/styleguide` shows the shared design system. It is only registered when `app.env` is not `production`.
 
@@ -108,7 +120,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 1. **Foundation** ✅
 2. **Authentication and RBAC** ✅
 3. **Administration and user management** ✅
-4. Collection hub operations
+4. **Collection hub operations** ✅
 5. Inventory
 6. Recycler marketplace
 7. Financial management

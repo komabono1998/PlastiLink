@@ -145,7 +145,7 @@ final class UserService
 
         $email = self::emailOf($in);
         $phone = self::phoneOf($in);
-        if ($email === null && $phone === null && !isset($errors['email'], $errors['phone'])) {
+        if ($email === null && $phone === null && !isset($errors['email']) && !isset($errors['phone'])) {
             $errors['email'] = 'Enter an email address or a phone number (or both).';
         }
         if ($email && !isset($errors['email']) && User::emailTaken($email, $exceptId)) {

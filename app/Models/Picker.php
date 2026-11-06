@@ -67,6 +67,29 @@ final class Picker
         return $s->fetch() ?: null;
     }
 
+    public static function findByCode(string $code): ?array
+    {
+        $s = Database::connection()->prepare(self::SELECT . ' WHERE p.picker_code = ?');
+        $s->execute([strtoupper(trim($code))]);
+        return $s->fetch() ?: null;
+    }
+
+    public static function findByUserId(int $userId): ?array
+    {
+        $s = Database::connection()->prepare(self::SELECT . ' WHERE p.user_id = ?');
+        $s->execute([$userId]);
+        return $s->fetch() ?: null;
+    }
+
+    /** Active pickers matching a search, limited to the hubs the viewer may see (null = all). */
+    public static function search(string $q, ?array $scope, int $limit = 10): array
+    {
+        [$where, $a] = self::where(['q' => $q, 'status' => 'active'], $scope);
+        $s = Database::connection()->prepare(self::SELECT . " $where ORDER BY u.full_name LIMIT " . max(1, min(25, $limit)));
+        $s->execute($a);
+        return $s->fetchAll();
+    }
+
     public static function create(array $d): int
     {
         $pdo = Database::connection();

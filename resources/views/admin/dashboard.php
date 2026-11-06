@@ -1,10 +1,10 @@
 <?php
 /** @var int $usersTotal @var int $usersActive @var int $usersPending @var int $usersSuspended
  *  @var int $pickersTotal @var int $pickersPending @var int $recyclersTotal @var int $recyclersPending @var int $hubsActive
- *  @var array $byRole @var int $failed24h @var array $recentLogins */
+ *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime */
 $waiting = $pickersPending + $recyclersPending;
 ?>
-<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Collections, inventory and finance (Phases 4 to 7)']]) ?>
+<?= component('welcome', ['user' => auth_user(), 'blurb' => 'Platform administration', 'coming' => ['Inventory, marketplace and finance (Phases 5 to 7)']]) ?>
 
 <?php if ($waiting > 0 && can('pickers.manage', 'recyclers.approve')): ?>
   <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
@@ -19,6 +19,14 @@ $waiting = $pickersPending + $recyclersPending;
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'shop', 'value' => (string) $hubsActive, 'label' => 'Active hubs']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'building', 'value' => (string) $recyclersTotal, 'label' => 'Recyclers', 'hint' => $recyclersPending . ' pending']) ?></div>
   <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'shield-exclamation', 'value' => (string) $failed24h, 'label' => 'Failed sign-ins (24 h)', 'hint' => $usersSuspended . ' suspended accounts']) ?></div>
+</div>
+
+<h2 class="h6 text-muted">Plastic collected (approved)</h2>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'box-seam', 'value' => format_kg($allTime['kg']), 'label' => 'Total collected', 'hint' => $allTime['approved'] . ' collections']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'cash-coin', 'value' => format_ugx($allTime['value']), 'label' => 'Total value']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'calendar-day', 'value' => format_kg($today['kg']), 'label' => 'Collected today', 'hint' => $today['recorded'] . ' recorded']) ?></div>
+  <div class="col-6 col-lg-3"><?= component('stat-card', ['icon' => 'hourglass-split', 'value' => (string) $allTime['pending'], 'label' => 'Collections awaiting approval']) ?></div>
 </div>
 
 <div class="row g-3">

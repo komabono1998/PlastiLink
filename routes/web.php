@@ -7,6 +7,9 @@ use App\Controllers\AccountController;
 use App\Controllers\ApprovalController;
 use App\Controllers\AuditController;
 use App\Controllers\AuthController;
+use App\Controllers\CollectionController;
+use App\Controllers\PriceController;
+use App\Controllers\ReceiptController;
 use App\Controllers\DashboardController;
 use App\Controllers\HealthController;
 use App\Controllers\HomeController;
@@ -86,6 +89,24 @@ $router->get('/pickers/register', [PickerController::class, 'create'], [$auth, n
 $router->post('/pickers', [PickerController::class, 'store'], [$auth, new PermissionMiddleware('pickers.register')]);
 $router->get('/pickers/{id:\d+}', [PickerController::class, 'show'], [$auth, new PermissionMiddleware('pickers.view')]);
 $router->post('/pickers/{id:\d+}/decision', [PickerController::class, 'decide'], [$auth, new PermissionMiddleware('pickers.manage')]);
+
+// Prices (history is append-only)
+$router->get('/prices', [PriceController::class, 'index'], [$auth, new PermissionMiddleware('prices.view')]);
+$router->post('/prices', [PriceController::class, 'store'], [$auth, new PermissionMiddleware('prices.manage')]);
+
+// Collections: hub staff record and weigh; a different person approves; pickers see only their own
+$router->get('/pickers/search', [PickerController::class, 'search'], [$auth, new PermissionMiddleware('collections.record')]);
+$viewCol = [$auth, new PermissionMiddleware('collections.view')];
+$recordCol = [$auth, new PermissionMiddleware('collections.record')];
+$router->get('/collections', [CollectionController::class, 'index'], $viewCol);
+$router->get('/collections/new', [CollectionController::class, 'create'], $recordCol);
+$router->post('/collections', [CollectionController::class, 'store'], $recordCol);
+$router->get('/collections/{id:\d+}', [CollectionController::class, 'show'], $viewCol);
+$router->post('/collections/{id:\d+}/reweigh', [CollectionController::class, 'reweigh'], $recordCol);
+$router->post('/collections/{id:\d+}/approve', [CollectionController::class, 'approve'], [$auth, new PermissionMiddleware('collections.approve')]);
+$router->post('/collections/{id:\d+}/reject', [CollectionController::class, 'reject'], [$auth, new PermissionMiddleware('collections.approve')]);
+$router->post('/collections/{id:\d+}/reverse', [CollectionController::class, 'reverse'], [$auth, new PermissionMiddleware('collections.reverse')]);
+$router->get('/receipts/{id:\d+}', [ReceiptController::class, 'show'], $viewCol);
 
 // Recyclers
 $anyRecycler = [$auth, new AnyPermissionMiddleware('recyclers.approve', 'recyclers.manage')];

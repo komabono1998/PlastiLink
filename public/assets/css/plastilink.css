@@ -100,4 +100,13 @@ body { background: var(--pl-bg); color: var(--pl-charcoal); }
 
 .swatch { height: 64px; border-radius: .6rem; border: 1px solid var(--pl-border); }
 
+/* Printing (receipts): only the receipt, no navigation */
+@media print {
+  body { background: #fff !important; }
+  .sidebar, .sidebar-backdrop, .dash-topbar, .no-print, .alert-success, .site-nav, .site-footer { display: none !important; }
+  .dash-main { padding: 0 !important; }
+  main { padding: 0 !important; }
+  .card { border: 1px solid #999 !important; box-shadow: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
