@@ -29,8 +29,66 @@ if (config('app.env') === 'production') {
 $command = $argv[1] ?? '';
 $reset = in_array('--reset', $argv, true);
 
+if ($command === 'demo-data') {
+    // Demonstration hubs, pickers and recyclers (clearly labelled DEMO). Safe to re-run.
+    $pdo = Database::connection();
+    $nb = $pdo->query('SELECT id, name FROM neighbourhoods ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR);
+    $nbIds = array_keys($nb);
+    $uid = static function (string $col, string $val) use ($pdo): ?int {
+        $s = $pdo->prepare("SELECT id FROM users WHERE $col = ?");
+        $s->execute([$val]);
+        return ($v = $s->fetchColumn()) ? (int) $v : null;
+    };
+
+    $hubIds = [];
+    foreach ([['DEMO Hub Walbiongo', $nbIds[0]], ['DEMO Hub Olailong', $nbIds[1] ?? $nbIds[0]]] as [$name, $nid]) {
+        $s = $pdo->prepare('SELECT id FROM collection_hubs WHERE name = ?');
+        $s->execute([$name]);
+        $hubIds[] = (int) ($s->fetchColumn() ?: App\Models\Hub::create([
+            'name' => $name, 'neighbourhood_id' => $nid, 'address_note' => 'Demo hub (not a real location)',
+            'latitude' => null, 'longitude' => null, 'status' => 'active',
+        ]));
+    }
+    if ($m = $uid('email', 'demo.hubmanager@example.test')) {
+        App\Models\Hub::assign($hubIds[0], $m, 'manager');
+    }
+    if ($o = $uid('email', 'demo.hubop@example.test')) {
+        App\Models\Hub::assign($hubIds[0], $o, 'operator');
+    }
+
+    $pw = static fn() => App\Helpers\Secret::tempPassword(14);   // random, never printed or stored elsewhere
+    // Profile for the demo picker login created by "demo-users"
+    if (($pu = $uid('phone_e164', '+256700000001')) && !$pdo->query("SELECT COUNT(*) FROM pickers WHERE user_id = $pu")->fetchColumn()) {
+        App\Models\Picker::create(['user_id' => $pu, 'neighbourhood_id' => $nbIds[0], 'preferred_hub_id' => $hubIds[0], 'national_id' => null,
+            'consent_version' => App\Services\PickerService::CONSENT_VERSION, 'registered_by' => null]);
+    }
+    $names = ['Akello Grace', 'Opio Moses', 'Atim Sarah', 'Okello Denis', 'Auma Rose'];
+    foreach ($names as $i => $n) {
+        $phone = '+2567000001' . str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT);
+        $id = $uid('phone_e164', $phone) ?? App\Models\User::create(['role' => 'waste_picker', 'full_name' => "DEMO $n", 'phone_e164' => $phone,
+            'password' => $pw(), 'status' => $i === 4 ? 'pending' : 'active']);
+        if ($pdo->query("SELECT COUNT(*) FROM pickers WHERE user_id = $id")->fetchColumn()) {
+            continue;   // profile already there
+        }
+        App\Models\Picker::create(['user_id' => $id, 'neighbourhood_id' => $nbIds[$i % count($nbIds)], 'preferred_hub_id' => $hubIds[$i % 2],
+            'national_id' => null, 'consent_version' => App\Services\PickerService::CONSENT_VERSION, 'registered_by' => null]);
+    }
+    if (($ru = $uid('email', 'demo.recycler@example.test')) && !$pdo->query("SELECT COUNT(*) FROM recyclers WHERE user_id = $ru")->fetchColumn()) {
+        App\Models\Recycler::create(['user_id' => ($ru), 'business_name' => 'DEMO Recycling Ltd', 'registration_number' => null,
+            'contact_person' => 'DEMO Recycler', 'address' => 'Demo address, Gulu', 'materials' => 'PET bottles', 'status' => 'approved']);
+    }
+    $id = $uid('email', 'demo.pending.recycler@example.test') ?? App\Models\User::create(['role' => 'recycler', 'full_name' => 'DEMO Pending Contact',
+        'email' => 'demo.pending.recycler@example.test', 'password' => $pw(), 'status' => 'pending']);
+    if (!$pdo->query("SELECT COUNT(*) FROM recyclers WHERE user_id = $id")->fetchColumn()) {
+        App\Models\Recycler::create(['user_id' => $id, 'business_name' => 'DEMO Pending Plastics Co', 'registration_number' => null,
+            'contact_person' => 'DEMO Pending Contact', 'address' => 'Demo address, Gulu', 'materials' => 'PET bottles', 'status' => 'pending']);
+    }
+    echo "Demo hubs, pickers and recyclers are in place (all labelled DEMO). Run 'demo-users' first for sign-in accounts.\n";
+    exit(0);
+}
+
 if ($command !== 'demo-users') {
-    fwrite(STDERR, "Usage: php seed.php demo-users [--reset]\n");
+    fwrite(STDERR, "Usage: php seed.php demo-users [--reset] | demo-data\n");
     exit(1);
 }
 

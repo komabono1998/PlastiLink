@@ -24,7 +24,8 @@
         <button class="btn btn-primary btn-lg w-100" type="submit">Sign in</button>
       </form>
 
-      <p class="text-center mt-3 mb-0"><a href="<?= e(url('/forgot-password')) ?>">Forgot your password?</a></p>
+      <p class="text-center mt-3 mb-1"><a href="<?= e(url('/forgot-password')) ?>">Forgot your password?</a></p>
+      <p class="text-center small text-muted mb-0">New here? <a href="<?= e(url('/register')) ?>">Register as a waste picker</a> · <a href="<?= e(url('/register/recycler')) ?>">Recycling company</a></p>
     </div></div>
   </div>
 </section>

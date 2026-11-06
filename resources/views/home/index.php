@@ -6,7 +6,10 @@
         <span class="badge text-bg-warning mb-3">Gulu City, Northern Uganda</span>
         <h1 class="display-5 fw-bold"><?= e(config('app.tagline')) ?></h1>
         <p class="lead mt-3">PlastiLink connects waste pickers, collection hubs and recycling companies, so plastic bottles are sold, not dumped, and every kilogram earns transparent income paid by mobile money.</p>
-        <p class="small mb-0 opacity-75"><i class="bi bi-tools"></i> Platform foundation (Phase 1). Sign-in and dashboards arrive in the next phases.</p>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <a class="btn btn-accent btn-lg" href="<?= e(url('/register')) ?>"><i class="bi bi-person-plus"></i> I am a waste picker</a>
+          <a class="btn btn-outline-light btn-lg" href="<?= e(url('/register/recycler')) ?>"><i class="bi bi-building"></i> I am a recycler</a>
+        </div>
       </div>
     </div>
   </div>

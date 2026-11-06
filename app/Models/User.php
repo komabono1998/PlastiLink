@@ -44,15 +44,104 @@ final class User
         return (int) $pdo->lastInsertId();
     }
 
+    /** @param array{q?:string,role?:string,status?:string} $f */
+    public static function paginate(array $f, int $offset, int $limit): array
+    {
+        [$where, $args] = self::filters($f);
+        $s = Database::connection()->prepare(
+            self::SELECT . " $where ORDER BY u.created_at DESC, u.id DESC LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset
+        );
+        $s->execute($args);
+        return $s->fetchAll();
+    }
+
+    public static function count(array $f): int
+    {
+        [$where, $args] = self::filters($f);
+        $s = Database::connection()->prepare("SELECT COUNT(*) FROM users u JOIN roles r ON r.id = u.role_id $where");
+        $s->execute($args);
+        return (int) $s->fetchColumn();
+    }
+
+    private static function filters(array $f): array
+    {
+        $w = [];
+        $a = [];
+        if (!empty($f['q'])) {
+            $w[] = '(u.full_name LIKE ? OR u.email LIKE ? OR u.phone_e164 LIKE ?)';
+            $like = '%' . addcslashes((string) $f['q'], '%_\\') . '%';
+            array_push($a, $like, $like, $like);
+        }
+        if (!empty($f['role'])) {
+            $w[] = 'r.slug = ?';
+            $a[] = $f['role'];
+        }
+        if (!empty($f['status'])) {
+            $w[] = 'u.status = ?';
+            $a[] = $f['status'];
+        }
+        return [$w ? 'WHERE ' . implode(' AND ', $w) : '', $a];
+    }
+
+    public static function emailTaken(string $email, ?int $exceptId = null): bool
+    {
+        $s = Database::connection()->prepare('SELECT COUNT(*) FROM users WHERE email = ? AND id <> ?');
+        $s->execute([$email, $exceptId ?? 0]);
+        return (int) $s->fetchColumn() > 0;
+    }
+
+    public static function phoneTaken(string $phone, ?int $exceptId = null): bool
+    {
+        $s = Database::connection()->prepare('SELECT COUNT(*) FROM users WHERE phone_e164 = ? AND id <> ?');
+        $s->execute([$phone, $exceptId ?? 0]);
+        return (int) $s->fetchColumn() > 0;
+    }
+
+    public static function updateProfile(int $id, string $name, ?string $email, ?string $phone, string $roleSlug): void
+    {
+        Database::connection()->prepare(
+            'UPDATE users SET full_name = ?, email = ?, phone_e164 = ?, role_id = (SELECT id FROM roles WHERE slug = ?) WHERE id = ?'
+        )->execute([$name, $email, $phone, $roleSlug, $id]);
+    }
+
+    /** Set status; when activating through approval, stamp who approved. */
+    public static function decide(int $id, string $status, ?int $byUserId): void
+    {
+        Database::connection()->prepare(
+            'UPDATE users SET status = ?, approved_by = IF(? = \'active\', ?, approved_by), approved_at = IF(? = \'active\', UTC_TIMESTAMP(), approved_at) WHERE id = ?'
+        )->execute([$status, $status, $byUserId, $status, $id]);
+    }
+
+    public static function setMustChange(int $id, bool $flag): void
+    {
+        Database::connection()->prepare('UPDATE users SET must_change_password = ? WHERE id = ?')->execute([$flag ? 1 : 0, $id]);
+    }
+
+    public static function activeSuperAdmins(): int
+    {
+        return (int) Database::connection()->query(
+            "SELECT COUNT(*) FROM users u JOIN roles r ON r.id = u.role_id WHERE r.slug = 'super_admin' AND u.status = 'active'"
+        )->fetchColumn();
+    }
+
+    /** @return array<int,array> active staff users of a role (for hub assignment pickers). */
+    public static function activeByRole(string $roleSlug): array
+    {
+        $s = Database::connection()->prepare(self::SELECT . " WHERE r.slug = ? AND u.status = 'active' ORDER BY u.full_name");
+        $s->execute([$roleSlug]);
+        return $s->fetchAll();
+    }
+
     public static function hash(string $password): string
     {
         return password_hash($password, PASSWORD_DEFAULT, ['cost' => 12]);
     }
 
+    /** Sets a new password and clears the "must change" flag (use setMustChange afterwards for temp passwords). */
     public static function updatePassword(int $id, string $password): void
     {
         Database::connection()
-            ->prepare('UPDATE users SET password_hash = ?, password_changed_at = UTC_TIMESTAMP() WHERE id = ?')
+            ->prepare('UPDATE users SET password_hash = ?, password_changed_at = UTC_TIMESTAMP(), must_change_password = 0 WHERE id = ?')
             ->execute([self::hash($password), $id]);
     }
 

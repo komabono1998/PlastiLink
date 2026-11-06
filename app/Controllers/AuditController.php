@@ -11,10 +11,6 @@ final class AuditController extends Controller
 {
     public function index(Request $request): string
     {
-        return $this->view('admin/audit', [
-            'title' => 'Audit trail',
-            'nav'   => DashboardController::nav($request),
-            'rows'  => AuditLog::recent(100),
-        ], 'layouts/dashboard');
+        return $this->page($request, 'admin/audit', 'Audit trail', ['rows' => AuditLog::recent(100)]);
     }
 }

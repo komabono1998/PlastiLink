@@ -26,6 +26,17 @@ final class AuditLog
         ]);
     }
 
+    /** Events about a user record (as subject) or performed by them. */
+    public static function aboutUser(int $userId, int $limit = 15): array
+    {
+        $s = Database::connection()->prepare(
+            'SELECT a.*, u.full_name FROM audit_logs a LEFT JOIN users u ON u.id = a.user_id
+             WHERE (a.entity_type = \'user\' AND a.entity_id = ?) OR a.user_id = ? ORDER BY a.id DESC LIMIT ' . max(1, min(100, $limit))
+        );
+        $s->execute([$userId, $userId]);
+        return $s->fetchAll();
+    }
+
     public static function recent(int $limit = 50): array
     {
         $s = Database::connection()->prepare(

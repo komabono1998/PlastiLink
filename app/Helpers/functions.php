@@ -86,6 +86,30 @@ function old(string $key, string $default = ''): string
     return Session::old($key, $default);
 }
 
+function field_error(string $field): string
+{
+    return Session::error($field);
+}
+
+/** Pagination query string that keeps current filters. */
+function page_url(int $page): string
+{
+    $q = $_GET;
+    $q['page'] = $page;
+    return '?' . http_build_query($q);
+}
+
+/** Roles that see unmasked phone numbers in lists. */
+function show_full_phone(): bool
+{
+    return AuthService::hasRole('super_admin');
+}
+
+function display_phone(?string $e164): string
+{
+    return show_full_phone() ? ($e164 ?? '—') : \App\Helpers\Phone::mask($e164);
+}
+
 /** Whole-shilling formatting: UGX 12,500 */
 function format_ugx(int|float|string $amount): string
 {

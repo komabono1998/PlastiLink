@@ -15,12 +15,18 @@ final class AuthMiddleware implements Middleware
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Pragma: no-cache');
 
-        if (AuthService::user() !== null) {
-            return null;
+        $user = AuthService::user();
+        if ($user === null) {
+            if ($request->method === 'GET') {
+                $_SESSION['intended'] = $request->path;
+            }
+            return redirect('/login');
         }
-        if ($request->method === 'GET') {
-            $_SESSION['intended'] = $request->path;
+
+        // Temporary password issued by staff: must be replaced before anything else.
+        if ((int) $user['must_change_password'] === 1 && !in_array($request->path, ['/account/password', '/logout'], true)) {
+            return redirect('/account/password');
         }
-        return redirect('/login');
+        return null;
     }
 }

@@ -4,7 +4,7 @@
 
 **Stack:** PHP 8.2+ (custom MVC, no framework) · PDO · MySQL/MariaDB · Bootstrap 5 · Bootstrap Icons · Chart.js. No Composer or Node needed.
 
-**Status:** Phases 1 (foundation) and 2 (authentication and RBAC) complete. See "Roadmap".
+**Status:** Phases 1 (foundation), 2 (authentication and RBAC) and 3 (administration and registrations) complete. See "Roadmap".
 
 ## Local setup (Windows + XAMPP)
 
@@ -47,6 +47,15 @@ Passwords are random and printed once in your terminal; they are never stored in
 - Routes are protected in `routes/web.php` with `AuthMiddleware`, `RoleMiddleware` and `PermissionMiddleware`. The server decides; hidden menu links are cosmetic only.
 - Password reset: `/forgot-password` issues a single-use, 60-minute token (only its SHA-256 hash is stored). Until a real email/SMS provider exists, the message is written to `storage/logs/outbox.log` (the log driver refuses to run in production). Set `app.url` in production so emailed links use your real domain.
 
+### Administration, registration and approvals (Phase 3)
+
+- **Screens** (shown in the sidebar only if your role may open them): `/users`, `/pickers`, `/hubs`, `/recyclers`, `/neighbourhoods`, `/approvals`, `/account/password`.
+- **Who can do what:** Super Administrators manage everything. Project Managers view users, pickers and hubs and register/approve recyclers. Hub Managers approve pickers at their hubs. Hub Managers and Operators register pickers in person, for their own hubs only.
+- **Hub scoping:** hub staff see only pickers whose preferred hub is one of their assigned hubs (`App\Services\HubScope`). Anything outside it returns 404. National ID is visible only to Super Administrators and Hub Managers, and never in lists. Phone numbers are masked for everyone except Super Administrators.
+- **Registration:** staff-registered pickers and recyclers are approved immediately and get a random one-time temporary password (shown once; the person must change it at first sign-in). Self-registration (`/register`, `/register/recycler`) always starts as *pending* and is limited to 5 per hour per IP. Picker consent text and version are stored with the record.
+- **Picker IDs** look like `PLP-000123`; hub codes like `HUB-001`.
+- **Demo hubs, pickers and recyclers** (labelled DEMO, local/staging only): `C:\xampp\php\php.exe seed.php demo-data` (run `demo-users` first). Safe to re-run.
+
 ### Useful commands
 
 | Command | Purpose |
@@ -56,6 +65,8 @@ Passwords are random and printed once in your terminal; they are never stored in
 | `php migrate.php rollback [n]` | Roll back the last n batches |
 | `php tests/phase1_smoke.php` | Run Phase 1 tests (needs Apache running) |
 | `php tests/phase2_auth.php` | Run Phase 2 auth/RBAC tests (creates and removes temporary test users) |
+| `php tests/phase3_admin.php` | Run Phase 3 administration, registration, approval and hub-scoping tests |
+| `php seed.php demo-data` | Create labelled demo hubs, pickers and recyclers |
 
 `/styleguide` shows the shared design system. It is only registered when `app.env` is not `production`.
 
@@ -96,7 +107,7 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 
 1. **Foundation** ✅
 2. **Authentication and RBAC** ✅
-3. Administration and user management
+3. **Administration and user management** ✅
 4. Collection hub operations
 5. Inventory
 6. Recycler marketplace

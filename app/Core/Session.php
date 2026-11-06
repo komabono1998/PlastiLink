@@ -26,6 +26,40 @@ final class Session
             'samesite' => 'Lax',
         ]);
         session_start();
+
+        // Old input / validation errors set on the previous request are readable for this one only.
+        $_SESSION['_old_now'] = $_SESSION['_old'] ?? [];
+        $_SESSION['_errors_now'] = $_SESSION['_errors'] ?? [];
+        unset($_SESSION['_old'], $_SESSION['_errors']);
+    }
+
+    /** @param array<string,string> $errors */
+    public static function flashErrors(array $errors): void
+    {
+        $_SESSION['_errors'] = $errors;
+    }
+
+    public static function error(string $field): string
+    {
+        return (string) ($_SESSION['_errors_now'][$field] ?? '');
+    }
+
+    public static function hasErrors(): bool
+    {
+        return !empty($_SESSION['_errors_now']);
+    }
+
+    /** One-time secret (e.g. a temporary password): readable once, then gone. */
+    public static function putOnce(string $key, string $value): void
+    {
+        $_SESSION['_once'][$key] = $value;
+    }
+
+    public static function pullOnce(string $key): ?string
+    {
+        $v = $_SESSION['_once'][$key] ?? null;
+        unset($_SESSION['_once'][$key]);
+        return $v;
     }
 
     public static function csrfToken(): string
@@ -78,7 +112,7 @@ final class Session
 
     public static function old(string $key, string $default = ''): string
     {
-        return (string) ($_SESSION['_old'][$key] ?? $default);
+        return (string) ($_SESSION['_old_now'][$key] ?? $default);
     }
 
     public static function clearOld(): void

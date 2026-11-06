@@ -25,7 +25,10 @@ final class Router
     /** @param Middleware[] $middleware */
     public function add(string $method, string $pattern, callable|array $handler, array $middleware = []): void
     {
-        $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', rtrim($pattern, '/') ?: '/') . '$#';
+        // {name} matches one segment; {name:regex} matches a custom pattern, e.g. {id:\d+}
+        $p = rtrim($pattern, '/') ?: '/';
+        $p = preg_replace('#\{(\w+):([^}]+)\}#', '(?P<$1>$2)', $p);
+        $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', $p) . '$#';
         $this->routes[] = [
             'method' => strtoupper($method), 'regex' => $regex,
             'handler' => $handler, 'middleware' => $middleware,

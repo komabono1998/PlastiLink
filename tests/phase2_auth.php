@@ -191,9 +191,10 @@ check('Login redirects back to intended page (/admin)', $r['status'] === 303 && 
 check('Session ID regenerated after login', $before !== '' && $after !== '' && $before !== $after);
 $cookieHdr = req($admin, 'GET', '/admin');
 check('Session cookie is HttpOnly + SameSite', (bool) preg_grep('/HttpOnly/i', file($admin['jar']) ?: []) && true);
-check('Super admin sees /admin dashboard', $cookieHdr['status'] === 200 && str_contains($cookieHdr['body'], 'Registered users'));
+check('Super admin sees /admin dashboard', $cookieHdr['status'] === 200 && str_contains($cookieHdr['body'], 'Users by role'));
 check('Authenticated pages are no-store', stripos($cookieHdr['headers'], 'no-store') !== false);
-check('Dashboard counts are real (users total >= 9)', preg_match('/stat-value">(\d+)</', $cookieHdr['body'], $m) && (int) $m[1] >= 9, $m[1] ?? '');
+$realActive = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE status='active'")->fetchColumn();
+check('Dashboard counts are real (active of total matches the database)', str_contains($cookieHdr['body'], "($realActive of "), "expected ($realActive of");
 check('Super admin opens audit trail', req($admin, 'GET', '/admin/audit')['status'] === 200);
 check('Guest-only /login redirects signed-in user to dashboard', loc(req($admin, 'GET', '/login')) === '/admin');
 check('/dashboard sends super admin to /admin', loc(req($admin, 'GET', '/dashboard')) === '/admin');
