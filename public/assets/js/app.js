@@ -247,6 +247,21 @@
     });
   });
 
+  // Confirmation prompts and printing, wired by data attributes (the Content-Security-Policy forbids inline onclick/onsubmit).
+  //   <form data-confirm="Sure?">  <button data-confirm="Sure?">  <button data-print>  <form data-prevent-submit>
+  // Capture phase + stopImmediatePropagation: a cancelled confirm must not trigger the "loading" spinner below.
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (f.hasAttribute && f.hasAttribute('data-prevent-submit')) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    if (f.dataset && f.dataset.confirm && !window.confirm(f.dataset.confirm)) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-confirm], [data-print]') : null;
+    if (!t) return;
+    if (t.hasAttribute('data-print')) { window.print(); return; }
+    if (t.tagName !== 'FORM' && !window.confirm(t.dataset.confirm)) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+
   // Loading state on forms: prevents double submission
   document.querySelectorAll('form[data-loading]').forEach(function (form) {
     form.addEventListener('submit', function () {

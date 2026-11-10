@@ -1,0 +1,46 @@
+# PlastiLink root .htaccess for PRODUCTION (Hostinger, Layout A: everything uploaded into the domain's public_html).
+# build.php installs this as .htaccess. It adds HTTPS redirect, HSTS, compression and caching on top of the development rules.
+
+Options -Indexes
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Always HTTPS (also when a proxy terminates TLS)
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Never serve application internals, tooling, backups or hidden files
+    RewriteRule ^(app|config|database|storage|resources|routes|tests|deploy|docs)(/|$) - [F,L]
+    RewriteRule ^(migrate|seed|jobs|backup|create-admin)\.php$ - [F,L]
+    RewriteRule ^(README\.md|CHANGELOG\.md|composer\..*)$ - [F,L]
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    RewriteRule \.(sql|gz|enc|zip|bak|log|env|ini|example)$ - [F,L]
+
+    # The app is only reachable at its normal address, never under /public/ (checked on the ORIGINAL request, so the internal rewrite below still works)
+    RewriteCond %{THE_REQUEST} "^[A-Z]{3,7} /(?:[^/ ?]+/)*public(?:[/? ]|$)"
+    RewriteRule ^ - [F,L]
+
+    # Everything else is served from /public
+    RewriteRule ^$ public/ [L]
+    RewriteRule ^(?!public/)(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 30 days"
+    ExpiresByType application/javascript "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 365 days"
+    ExpiresByType font/woff "access plus 365 days"
+</IfModule>

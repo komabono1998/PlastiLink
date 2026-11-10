@@ -4,7 +4,7 @@ $mine = $act['side'] === 'recycler';
 $agreed = $o['agreed_qty_kg'] !== null;
 $oid = (int) $o['id'];
 $post = function (string $path, string $inner, string $confirm = '') use ($oid): string {
-    return '<form method="post" action="' . e(url('/orders/' . $oid . '/' . $path)) . '"' . ($confirm !== '' ? ' onsubmit="return confirm(\'' . e($confirm) . '\');"' : '') . ' data-loading>'
+    return '<form method="post" action="' . e(url('/orders/' . $oid . '/' . $path)) . '"' . ($confirm !== '' ? ' data-confirm="' . e($confirm) . '"' : '') . ' data-loading>'
         . csrf_field() . $inner . '</form>';
 };
 $remaining = $agreed ? \App\Helpers\Weight::fromDecimal((string) $o['agreed_qty_kg']) - \App\Helpers\Weight::fromDecimal((string) $o['dispatched_kg']) : 0;

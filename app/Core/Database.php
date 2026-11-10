@@ -10,6 +10,20 @@ final class Database
 {
     private static ?PDO $pdo = null;
 
+    /** A separate, non-shared connection (backups use one so a long dump never disturbs the shared one). $database null = no default schema. */
+    public static function open(?string $database = null, bool $buffered = true): PDO
+    {
+        $c = Config::get('database');
+        $dsn = sprintf('mysql:host=%s;port=%d;%scharset=%s', $c['host'], (int) $c['port'], $database !== null ? 'dbname=' . $database . ';' : '', $c['charset']);
+        return new PDO($dsn, (string) $c['username'], (string) $c['password'], [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => $buffered,
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$c['charset']} COLLATE {$c['collation']}, time_zone = '+00:00'",
+        ]);
+    }
+
     public static function connection(): PDO
     {
         if (self::$pdo === null) {

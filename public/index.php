@@ -10,9 +10,7 @@ use App\Core\Request;
 use App\Core\Router;
 use App\Core\Session;
 
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: SAMEORIGIN');
-header('Referrer-Policy: strict-origin-when-cross-origin');
+App\Core\SecurityHeaders::send();
 header('Content-Type: text/html; charset=utf-8');
 
 Session::start();

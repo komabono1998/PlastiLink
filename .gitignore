@@ -17,3 +17,6 @@ vendor/
 !/public/assets/vendor/
 node_modules/
 .claude/
+storage/backups/*
+!storage/backups/.gitkeep
+/deploy/dist/

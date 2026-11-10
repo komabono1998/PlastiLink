@@ -3,7 +3,7 @@ $voided = !empty($r['voided_at']);
 ?>
 <div class="d-flex justify-content-between align-items-center gap-2 mb-3 no-print">
   <a class="btn btn-outline-primary" href="<?= e(url('/collections/' . $r['collection_id'])) ?>"><i class="bi bi-arrow-left"></i> Back</a>
-  <button class="btn btn-primary" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  <button class="btn btn-primary" type="button" data-print><i class="bi bi-printer"></i> Print</button>
 </div>
 
 <div class="card receipt mx-auto" style="max-width:520px"><div class="card-body p-4">

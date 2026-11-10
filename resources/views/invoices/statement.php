@@ -1,5 +1,5 @@
 <?php /** @var array $rec @var int $balance @var array $entries */ ?>
-<div class="d-flex justify-content-end mb-2 no-print"><button class="btn btn-outline-primary" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+<div class="d-flex justify-content-end mb-2 no-print"><button class="btn btn-outline-primary" type="button" data-print><i class="bi bi-printer"></i> Print</button></div>
 <div class="card mx-auto" style="max-width:720px"><div class="card-body p-4">
   <div class="text-center mb-3"><div class="brand"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></div>
     <h2 class="h5 mt-2 mb-0">Account statement</h2><div class="small text-muted"><?= e($rec['business_name']) ?> · <?= e(format_datetime(gmdate('Y-m-d H:i:s'), 'd M Y')) ?></div></div>

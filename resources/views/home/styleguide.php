@@ -35,7 +35,7 @@
 
 <section id="forms" class="mb-5">
   <h2 class="h5">Forms (with CSRF + loading state)</h2>
-  <form class="card card-body" style="max-width:520px" data-loading onsubmit="return false">
+  <form class="card card-body" style="max-width:520px" data-loading data-prevent-submit>
     <?= csrf_field() ?>
     <label class="form-label" for="sg-name">Full name</label>
     <input class="form-control mb-3" id="sg-name" type="text" placeholder="e.g. Akello Grace">

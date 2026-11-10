@@ -4,6 +4,10 @@ DirectoryIndex index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Refuse direct requests under /public/ (the app has one address). Checked on the ORIGINAL request line, so rewrites from the parent .htaccess still work.
+    RewriteCond %{THE_REQUEST} "^[A-Z]{3,7} /(?:[^/ ?]+/)*public(?:[/? ]|$)"
+    RewriteRule ^ - [F,L]
+
     # Real files (assets, uploads) are served directly; everything else hits the front controller
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

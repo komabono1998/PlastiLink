@@ -1,0 +1,44 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * PRODUCTION settings. On the server, copy this file to config/app.local.php and fill in the values.
+ * That file is NEVER committed to git and is not included in the deployment package. Keep it readable only by your hosting account (chmod 640).
+ * Generate random secrets with:   php -r "echo bin2hex(random_bytes(24)), PHP_EOL;"
+ *
+ * After editing, run:  php deploy/preflight.php
+ */
+return [
+    'env'   => 'production',
+    'debug' => false,                                   // never true on a live server
+    'url'   => 'https://CHANGE-ME.example.org',         // the real address; used in emailed links
+
+    'security' => [
+        'csp'  => 'enforce',
+        'hsts' => true,
+    ],
+
+    'backup' => [
+        'key' => '',                                    // 32+ random characters. Store a COPY somewhere safe (not on this server): without it backups cannot be restored
+    ],
+
+    'finance' => [
+        'provider' => 'manual',                         // manual until MTN / Airtel credentials have been tested in their sandboxes; then 'momo'
+    ],
+
+    'integrations' => [
+        'webhook_token' => '',                          // 24+ random characters, only if you use provider callbacks or USSD
+        'sms' => [
+            'driver' => 'log',                          // 'africastalking' once credentials are set below; 'log' means NO message is delivered
+            'africastalking' => ['username' => '', 'api_key' => '', 'sender_id' => '', 'sandbox' => false],
+        ],
+        'ussd' => ['enabled' => false],
+        'momo' => [
+            'mtn'    => ['enabled' => false],           // live values: base_url, environment => 'mtnuganda', currency => 'UGX', keys
+            'airtel' => ['enabled' => false],
+        ],
+    ],
+
+    // Optional impact conversions: leave empty unless the programme has an approved factor and can name its source
+    'impact' => ['bottles_per_kg' => null, 'co2e_kg_per_kg' => null, 'source' => ''],
+];

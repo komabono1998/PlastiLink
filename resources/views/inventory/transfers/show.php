@@ -30,7 +30,7 @@
     <?php endif; ?>
     <?php if ($canCancel): ?>
     <div class="card"><div class="card-body"><h2 class="h6">Cancel this transfer</h2>
-      <form method="post" action="<?= e(url('/inventory/transfers/' . $t['id'] . '/cancel')) ?>" onsubmit="return confirm('Cancel this transfer and return the stock to your hub?');">
+      <form method="post" action="<?= e(url('/inventory/transfers/' . $t['id'] . '/cancel')) ?>" data-confirm="Cancel this transfer and return the stock to your hub?">
         <?= csrf_field() ?>
         <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Reason (required)" required aria-label="Reason for cancelling"></textarea>
         <button class="btn btn-outline-danger" type="submit">Cancel transfer</button>

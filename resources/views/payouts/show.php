@@ -46,7 +46,7 @@
     <?php endif; ?>
     <?php if ($canCancel): ?>
     <div class="card"><div class="card-body"><h2 class="h6">Cancel this request</h2>
-      <form method="post" action="<?= e(url('/payouts/' . $q['id'] . '/cancel')) ?>" onsubmit="return confirm('Cancel this payout request?');"><?= csrf_field() ?>
+      <form method="post" action="<?= e(url('/payouts/' . $q['id'] . '/cancel')) ?>" data-confirm="Cancel this payout request?"><?= csrf_field() ?>
         <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Reason (required)" required aria-label="Reason for cancelling"></textarea><button class="btn btn-outline-danger" type="submit">Cancel request</button></form>
     </div></div>
     <?php endif; ?>

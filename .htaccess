@@ -8,8 +8,15 @@ Options -Indexes
     RewriteEngine On
 
     # Never serve application internals or tooling
-    RewriteRule ^(app|config|database|storage|resources|routes|tests)(/|$) - [F,L]
-    RewriteRule ^(migrate\.php|seed\.php|jobs\.php|README\.md|\.git.*|composer\..*)$ - [F,L]
+    RewriteRule ^(app|config|database|storage|resources|routes|tests|deploy|docs)(/|$) - [F,L]
+    RewriteRule ^(migrate|seed|jobs|backup|create-admin)\.php$ - [F,L]
+    RewriteRule ^(README\.md|CHANGELOG\.md|composer\..*)$ - [F,L]
+    RewriteRule ^\.git - [F,L]
+    RewriteRule \.(sql|gz|enc|zip|bak|log|env|ini|example)$ - [F,L]
+
+    # The app is only reachable at its normal address, never under /public/ (checked on the ORIGINAL request, so the internal rewrite below still works)
+    RewriteCond %{THE_REQUEST} "^[A-Z]{3,7} /(?:[^/ ?]+/)*public(?:[/? ]|$)"
+    RewriteRule ^ - [F,L]
 
     # Everything else is served from /public
     RewriteRule ^$ public/ [L]

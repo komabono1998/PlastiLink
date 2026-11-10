@@ -1,7 +1,7 @@
 <?php /** @var array $c @var array $weighings @var bool $ownRecord */
 $pending = $c['status'] === 'pending';
 $form = static fn(string $action, string $inner, string $confirm = ''): string =>
-    '<form method="post" action="' . e(url('/collections/' . $c['id'] . '/' . $action)) . '"' . ($confirm !== '' ? ' onsubmit="return confirm(\'' . e($confirm) . '\');"' : '') . '>' . csrf_field() . $inner . '</form>';
+    '<form method="post" action="' . e(url('/collections/' . $c['id'] . '/' . $action)) . '"' . ($confirm !== '' ? ' data-confirm="' . e($confirm) . '"' : '') . '>' . csrf_field() . $inner . '</form>';
 ?>
 <div class="row g-3">
   <div class="col-lg-7">

@@ -286,7 +286,7 @@ check('Receipt snapshot holds no phone number or national ID', !str_contains($sn
 $pdo->exec("UPDATE users SET full_name = 'P4 Renamed Alpha' WHERE id = {$pkA['uid']}");
 check('Issued receipt is immutable (picker renamed later)', str_contains(req($cl['hmA'], 'GET', "/receipts/$rid")['body'], 'P4 Picker Alpha') && !str_contains(req($cl['hmA'], 'GET', "/receipts/$rid")['body'], 'P4 Renamed Alpha'));
 $pdo->exec("UPDATE users SET full_name = 'P4 Picker Alpha' WHERE id = {$pkA['uid']}");
-check('Print stylesheet and Print button present', str_contains($rc['body'], 'window.print()') && str_contains(file_get_contents(BASE_PATH . '/public/assets/css/plastilink.css'), '@media print'));
+check('Print stylesheet and Print button present', str_contains($rc['body'], 'data-print') && str_contains(file_get_contents(BASE_PATH . '/public/assets/css/plastilink.css'), '@media print'));
 
 // ---------------------------------------------------------------- scoping
 check('Hub B manager gets 404 for a hub A collection and receipt', req($cl['hmB'], 'GET', "/collections/$c1")['status'] === 404 && req($cl['hmB'], 'GET', "/receipts/$rid")['status'] === 404);

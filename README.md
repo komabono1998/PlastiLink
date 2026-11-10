@@ -135,6 +135,16 @@ Everything is **off by default** and falls back to the safe local behaviour. Key
 - **Reports:** two new reports, *Geographic* (Hub Managers: own hubs only) and *Programme progress and monthly impact* (Super Administrator, Project Manager), with CSV, Excel and PDF downloads and the usual audit.
 - Migration `0022` adds the `monitoring.view` and `targets.manage` permissions and an index for the hotspot queries.
 
+### Testing, security and deployment (Phase 11)
+
+- **Security:** a strict Content-Security-Policy (no inline scripts or event handlers; confirmations and printing use `data-confirm` / `data-print`), HSTS, Permissions-Policy and friends (`app/Core/SecurityHeaders.php`). Details, controls and accepted risks: [`docs/SECURITY.md`](docs/SECURITY.md).
+- **Tests:** `php tests/run_all.php` runs every suite; `tests/phase11_security.php` walks every route as every role and probes CSRF, injection, XSS, IDOR, file exposure and sessions; `tests/phase11_journey.php` is an end-to-end story (register → collect → earn → payout → recycler order → invoice → payment → reports → backup and restore proof); `tests/perf_load.php` loads the app with thousands of rows and concurrent users.
+- **Production configuration:** copy `config/app.production.php.example` to `config/app.local.php`; run `php deploy/preflight.php` (fails loudly on unsafe settings, demo data, missing admin, pending migrations, failing ledger checks).
+- **First administrator on a server:** `php create-admin.php --email=… --name="…"` (prints a one-time password). Never run `seed.php` in production.
+- **Package:** `php deploy/build.php` (Layout A: one zip for `public_html`) or `php deploy/build.php --split` (Layout B: private folder + public stub). The package contains no secrets, tests, docs or demo seeder. Production `.htaccess` adds HTTPS redirect, HSTS, compression and caching.
+- **Backups:** `php backup.php run | list | verify | prune | restore` (pure PHP, encrypted with `backup.key`, verified by a real restore into a scratch database when the database user may create one).
+- **Docs:** [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) (Hostinger runbook), [`docs/OPERATIONS.md`](docs/OPERATIONS.md) (daily/weekly tasks, backups, restore, incidents), [`docs/UAT.md`](docs/UAT.md) (acceptance scripts), [`docs/USER_GUIDES.md`](docs/USER_GUIDES.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DATA_PROTECTION.md`](docs/DATA_PROTECTION.md), [`CHANGELOG.md`](CHANGELOG.md).
+
 ### Useful commands
 
 | Command | Purpose |
@@ -204,6 +214,6 @@ Point the domain's document root at `public/` (the root `.htaccess` is only for 
 8. **Reports and analytics** ✅
 9. **External integrations** (SMS, USSD, MTN MoMo, Airtel Money) ✅ built and tested against fakes; live credentials and sandbox runs still needed
 10. **Geographic and programme monitoring** ✅
-11. Testing and deployment
+11. **Testing and deployment** ✅ (built and tested locally; the Hostinger deployment itself and UAT are for you to carry out with docs/DEPLOYMENT.md and docs/UAT.md)
 
 PHP extensions `gd`, `zip` and `intl` are not enabled in this XAMPP install. They will be needed for Phase 8 exports.

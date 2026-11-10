@@ -236,7 +236,7 @@ $d1 = (int) ($m[1] ?? 0);
 $row = $pdo->query("SELECT * FROM stock_dispatches WHERE id = $d1")->fetch();
 check('Dispatch: DSP- reference, dispatched, 20.00 kg; stock A = 50', preg_match('/^DSP-\d{8}-\d{6}$/', (string) $row['reference']) === 1 && $row['status'] === 'dispatched' && $row['qty_kg'] === '20.00' && $lvl($hubA) === '50.00' && $movs($hubA, 'dispatch_out') === 1);
 $page = req($cl['hmA'], 'GET', "/inventory/dispatches/$d1");
-check('Delivery note shows hub, recycler, weight, vehicle and has a print button', str_contains($page['body'], 'P5TEST Recycling') && str_contains($page['body'], '20 kg') && str_contains($page['body'], 'UAB 123X') && str_contains($page['body'], 'window.print()'));
+check('Delivery note shows hub, recycler, weight, vehicle and has a print button', str_contains($page['body'], 'P5TEST Recycling') && str_contains($page['body'], '20 kg') && str_contains($page['body'], 'UAB 123X') && str_contains($page['body'], 'data-print'));
 $r2 = req($cl['hmA'], 'POST', '/inventory/dispatches', ['_csrf' => csrfFrom(req($cl['hmA'], 'GET', '/inventory/dispatches/new')['body']), 'token' => $dk, 'hub_id' => $hubA, 'recycler_id' => $recOk, 'plastic_category_id' => $catId, 'quantity_kg' => '20']);
 check('Dispatch double submit sends nothing twice', loc($r2) === "/inventory/dispatches/$d1" && $lvl($hubA) === '50.00');
 check('Hub B manager gets 404 for a hub A dispatch', req($cl['hmB'], 'GET', "/inventory/dispatches/$d1")['status'] === 404);

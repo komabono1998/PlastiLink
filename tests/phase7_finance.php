@@ -346,7 +346,7 @@ check('Picker A can open their own request and payment', req($cl['pkA'], 'GET', 
 $show = req($cl['hmA'], 'GET', "/payouts/$q2")['body'];
 check('Phone numbers are masked for hub managers and shown in full to the super admin', !str_contains($show, '+256700044101') && str_contains($show, '+256 70* ***101') && str_contains(req($cl['sa'], 'GET', "/payouts/$q2")['body'], '+256700044101'));
 $stm = req($cl['pkA'], 'GET', '/earnings/statement')['body'];
-check('Income statement: shows the balance and entries, never a phone number or national ID', str_contains($stm, 'Income statement') && str_contains($stm, 'UGX 14,000') && !str_contains($stm, '700044101') && !str_contains($stm, 'NIN') && str_contains($stm, 'window.print()'));
+check('Income statement: shows the balance and entries, never a phone number or national ID', str_contains($stm, 'Income statement') && str_contains($stm, 'UGX 14,000') && !str_contains($stm, '700044101') && !str_contains($stm, 'NIN') && str_contains($stm, 'data-print'));
 check('Staff can print a picker statement for their pickers only', req($cl['hmA'], 'GET', "/earnings/$pkA/statement")['status'] === 200 && req($cl['hmB'], 'GET', "/earnings/$pkA/statement")['status'] === 404);
 $today = Dates::todayYmd();
 $stmP = req($cl['pkA'], 'GET', "/earnings/statement?from=$today&to=$today")['body'];

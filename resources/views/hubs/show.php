@@ -33,7 +33,7 @@
               <td><?= component('status-badge', ['status' => $s['status']]) ?></td>
               <td class="text-end">
                 <?php if (can('hubs.manage')): ?>
-                <form method="post" action="<?= e(url('/hubs/' . $hub['id'] . '/unassign')) ?>" class="m-0" onsubmit="return confirm('Remove this person from the hub?');">
+                <form method="post" action="<?= e(url('/hubs/' . $hub['id'] . '/unassign')) ?>" class="m-0" data-confirm="Remove this person from the hub?">
                   <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= e($s['user_id']) ?>">
                   <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
                 </form>

@@ -3,7 +3,7 @@ $back = '/pickers/' . $p['id'];
 $st = $p['account_status'];
 $act = static function (string $decision, string $label, string $cls, string $confirm = '') use ($p, $back): string {
     return '<form method="post" action="' . e(url('/pickers/' . $p['id'] . '/decision')) . '" class="m-0"'
-        . ($confirm !== '' ? ' onsubmit="return confirm(\'' . e($confirm) . '\');"' : '') . '>'
+        . ($confirm !== '' ? ' data-confirm="' . e($confirm) . '"' : '') . '>'
         . csrf_field() . '<input type="hidden" name="decision" value="' . e($decision) . '"><input type="hidden" name="back" value="' . e($back) . '">'
         . '<button class="btn ' . $cls . '" type="submit">' . $label . '</button></form>';
 };

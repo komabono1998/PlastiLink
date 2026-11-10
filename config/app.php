@@ -35,6 +35,16 @@ return [
         'co2e_kg_per_kg'  => null,   // kg CO2-equivalent avoided per kg of PET recycled (cite the study)
         'source'          => '',     // where the factors come from; printed on the report next to the figures
     ],
+    'security' => [
+        'csp'  => 'enforce',                 // enforce | report-only | off (leave on "enforce")
+        'hsts' => true,                      // Strict-Transport-Security, sent only over https in production
+    ],
+    'backup'   => [
+        'key'          => '',                // 32+ random characters: backups are encrypted with it when set. Keep a copy somewhere SAFE: without it they cannot be restored
+        'keep_daily'   => 14,
+        'keep_weekly'  => 8,
+        'directory'    => '',                // default: storage/backups (not web-accessible)
+    ],
     // External integrations (Phase 9). EVERYTHING here is off/empty by default. Put real values ONLY in config/app.local.php
     // (git-ignored) on the machine or server that needs them. Never commit keys.
     'integrations' => [

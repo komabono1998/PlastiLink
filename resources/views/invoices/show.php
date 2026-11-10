@@ -1,5 +1,5 @@
 <?php /** @var array $i @var array $payments @var int $outstanding @var bool $overdue @var bool $canRecord @var bool $canVoid @var string $token @var string $role */ ?>
-<div class="d-flex justify-content-end mb-2 no-print"><button class="btn btn-outline-primary" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+<div class="d-flex justify-content-end mb-2 no-print"><button class="btn btn-outline-primary" type="button" data-print><i class="bi bi-printer"></i> Print</button></div>
 <div class="row g-3">
   <div class="col-lg-7">
     <div class="card mb-3"><div class="card-body">
@@ -52,7 +52,7 @@
     <?php if ($canVoid): ?>
     <div class="card"><div class="card-body"><h2 class="h6">Void this invoice</h2>
       <p class="small text-muted">Only while nothing has been paid. The reason is audited.</p>
-      <form method="post" action="<?= e(url('/invoices/' . $i['id'] . '/void')) ?>" onsubmit="return confirm('Void this invoice?');"><?= csrf_field() ?>
+      <form method="post" action="<?= e(url('/invoices/' . $i['id'] . '/void')) ?>" data-confirm="Void this invoice?"><?= csrf_field() ?>
         <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Reason (required, at least 5 characters)" required aria-label="Reason for voiding"></textarea><button class="btn btn-outline-danger" type="submit">Void invoice</button></form></div></div>
     <?php endif; ?>
   </div>

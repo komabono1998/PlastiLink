@@ -64,7 +64,7 @@
     <?php if ($canReverse): ?>
     <div class="card"><div class="card-body"><h2 class="h6">Reverse this payment</h2>
       <p class="small text-muted">For genuine errors only. An opposite entry is posted and the reason is audited.</p>
-      <form method="post" action="<?= e(url('/payments/' . $p['id'] . '/reverse')) ?>" onsubmit="return confirm('Reverse this payment?');"><?= csrf_field() ?>
+      <form method="post" action="<?= e(url('/payments/' . $p['id'] . '/reverse')) ?>" data-confirm="Reverse this payment?"><?= csrf_field() ?>
         <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Reason (required, at least 5 characters)" required aria-label="Reason for reversal"></textarea><button class="btn btn-outline-danger" type="submit">Reverse</button></form></div></div>
     <?php endif; ?>
   </div>

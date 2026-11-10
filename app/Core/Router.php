@@ -30,9 +30,15 @@ final class Router
         $p = preg_replace('#\{(\w+):([^}]+)\}#', '(?P<$1>$2)', $p);
         $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', $p) . '$#';
         $this->routes[] = [
-            'method' => strtoupper($method), 'regex' => $regex,
+            'method' => strtoupper($method), 'regex' => $regex, 'pattern' => $pattern,
             'handler' => $handler, 'middleware' => $middleware,
         ];
+    }
+
+    /** Every registered route (used by the security tests to check that none is left unprotected by accident). */
+    public function routes(): array
+    {
+        return $this->routes;
     }
 
     /** Returns the response body (string) after setting status/headers. */

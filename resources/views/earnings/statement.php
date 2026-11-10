@@ -3,7 +3,7 @@
   <div class="col-6 col-md-3"><label class="visually-hidden" for="from">From</label><input class="form-control" id="from" name="from" type="date" value="<?= e($from_raw) ?>"></div>
   <div class="col-6 col-md-3"><label class="visually-hidden" for="to">To</label><input class="form-control" id="to" name="to" type="date" value="<?= e($to_raw) ?>"></div>
   <div class="col-6 col-md-2"><button class="btn btn-outline-primary w-100" type="submit">Show period</button></div>
-  <div class="col-6 col-md-2"><button class="btn btn-primary w-100" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+  <div class="col-6 col-md-2"><button class="btn btn-primary w-100" type="button" data-print><i class="bi bi-printer"></i> Print</button></div>
 </form>
 
 <div class="card mx-auto" style="max-width:720px"><div class="card-body p-4">

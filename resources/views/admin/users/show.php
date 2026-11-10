@@ -27,7 +27,7 @@ $isProfileRole = in_array($u['role_slug'], ['waste_picker', 'recycler'], true);
       <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-primary" href="<?= e(url('/users/' . $u['id'] . '/edit')) ?>"><i class="bi bi-pencil"></i> Edit</a>
         <?php if (!$self): ?>
-          <form method="post" action="<?= e(url('/users/' . $u['id'] . '/reset-password')) ?>" class="m-0" onsubmit="return confirm('Create a new temporary password for this person?');">
+          <form method="post" action="<?= e(url('/users/' . $u['id'] . '/reset-password')) ?>" class="m-0" data-confirm="Create a new temporary password for this person?">
             <?= csrf_field() ?><button class="btn btn-outline-primary" type="submit"><i class="bi bi-key"></i> Reset password</button>
           </form>
           <?php if (!$isProfileRole): ?>
@@ -35,7 +35,7 @@ $isProfileRole = in_array($u['role_slug'], ['waste_picker', 'recycler'], true);
               <?= csrf_field() ?>
               <?php if ($u['status'] === 'active'): ?>
                 <input type="hidden" name="status" value="suspended">
-                <button class="btn btn-outline-danger" type="submit" onclick="return confirm('Suspend this account? They will be signed out on their next request.');"><i class="bi bi-slash-circle"></i> Suspend</button>
+                <button class="btn btn-outline-danger" type="submit" data-confirm="Suspend this account? They will be signed out on their next request."><i class="bi bi-slash-circle"></i> Suspend</button>
               <?php else: ?>
                 <input type="hidden" name="status" value="active">
                 <button class="btn btn-primary" type="submit"><i class="bi bi-check-circle"></i> <?= $u['status'] === 'pending' ? 'Approve' : 'Reactivate' ?></button>

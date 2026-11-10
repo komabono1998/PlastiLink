@@ -17,7 +17,7 @@
       <?php if ($d['status'] === 'cancelled'): ?><dt class="col-sm-4">Cancelled</dt><dd class="col-sm-8"><?= e(format_datetime($d['cancelled_at'])) ?> by <?= e($d['cancelled_by_name'] ?? '—') ?>: <?= e($d['cancel_reason']) ?></dd><?php endif; ?>
     </dl>
     <div class="d-none d-print-block mt-5 small">Hub signature: ____________________ &nbsp;&nbsp; Recycler signature: ____________________</div>
-    <hr class="no-print"><button class="btn btn-outline-primary no-print" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print delivery note</button>
+    <hr class="no-print"><button class="btn btn-outline-primary no-print" type="button" data-print><i class="bi bi-printer"></i> Print delivery note</button>
   </div></div></div>
 
   <?php if ($d['status'] === 'dispatched' && can('inventory.manage')): ?>
@@ -29,7 +29,7 @@
         <button class="btn btn-primary" type="submit"><i class="bi bi-check-circle"></i> Delivered</button>
       </form></div></div>
     <div class="card"><div class="card-body"><h2 class="h6">Cancel dispatch</h2>
-      <form method="post" action="<?= e(url('/inventory/dispatches/' . $d['id'] . '/cancel')) ?>" onsubmit="return confirm('Cancel this dispatch and return the stock to the hub?');">
+      <form method="post" action="<?= e(url('/inventory/dispatches/' . $d['id'] . '/cancel')) ?>" data-confirm="Cancel this dispatch and return the stock to the hub?">
         <?= csrf_field() ?>
         <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Reason (required)" required aria-label="Reason for cancelling"></textarea>
         <button class="btn btn-outline-danger" type="submit">Cancel dispatch</button>
