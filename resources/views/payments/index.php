@@ -18,15 +18,31 @@ $staff = !in_array($role, ['waste_picker', 'recycler'], true);
   <?php if (!$rows): ?><?= component('empty-state', ['icon' => 'credit-card', 'title' => 'No payments found']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><th>Who</th><th>Type</th><th class="text-end">Amount</th><th>Method</th><th>Status</th><th>Reconciled</th></tr></thead>
+    <thead><tr><th>Reference</th><th>Who</th><th>Type</th><th class="text-end">Amount</th><th>Method</th><th>Status</th><th>Reconciled</th><th class="text-end">Actions</th></tr></thead>
     <tbody>
-    <?php foreach ($rows as $p): ?>
+    <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($rows as $p): ?>
       <tr><td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/payments/' . $p['id'])) ?>"><?= e($p['reference']) ?></a></td>
         <td><?= e($p['direction'] === 'out' ? $p['picker_name'] : $p['business_name']) ?><div class="small text-muted"><?= e($p['direction'] === 'out' ? $p['picker_code'] : $p['invoice_number']) ?></div></td>
         <td><?= $p['direction'] === 'out' ? 'Payout' : 'Received' ?></td>
         <td class="text-end text-nowrap"><?= e(format_ugx($p['amount_ugx'])) ?></td><td><?= e(ucfirst(str_replace('_', ' ', $p['method']))) ?></td>
         <td><?= component('status-badge', ['status' => $p['status']]) ?></td>
-        <td class="small"><?= $p['reconciled_at'] ? '<i class="bi bi-check2 text-success"></i> ' . e($p['statement_reference']) : '—' ?></td></tr>
+        <td class="small"><?= $p['reconciled_at'] ? '<i class="bi bi-check2 text-success"></i> ' . e($p['statement_reference']) : '—' ?></td>
+        <?php
+        $acts = [];
+        if ($p['direction'] === 'out' && in_array($p['status'], ['pending', 'failed'], true) && can('payments.process')) {
+            $acts[] = ['label' => $p['status'] === 'failed' ? 'Retry' : 'Pay', 'icon' => 'cash-coin', 'class' => 'btn-primary', 'href' => '/payments/' . $p['id']];
+        } elseif ($p['direction'] === 'in' && $p['status'] === 'pending' && can('payments.approve')) {
+            if ((int) ($p['created_by'] ?? 0) !== $me) { // someone else must confirm money received
+                $acts[] = ['label' => 'Confirm', 'icon' => 'check-circle', 'class' => 'btn-primary', 'post' => '/payments/' . $p['id'] . '/receipt-decision', 'fields' => ['decision' => 'confirm'],
+                    'confirm' => 'Confirm that ' . format_ugx($p['amount_ugx']) . ' was received?'];
+            }
+            $acts[] = ['label' => 'Review', 'href' => '/payments/' . $p['id']];
+        } elseif ($p['status'] === 'successful' && can('payments.reverse')) {
+            $acts[] = ['label' => 'Reverse', 'icon' => 'arrow-counterclockwise', 'class' => 'btn-outline-danger', 'href' => '/payments/' . $p['id']];
+        } else {
+            $acts[] = ['label' => 'Open', 'href' => '/payments/' . $p['id']];
+        } ?>
+        <td class="text-end text-nowrap"><?= component('row-actions', ['actions' => $acts]) ?></td></tr>
     <?php endforeach; ?>
     </tbody>
   </table></div>

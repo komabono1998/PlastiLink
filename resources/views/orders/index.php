@@ -25,7 +25,7 @@ $mine = $side === 'recycler';
     <?= component('empty-state', ['icon' => 'receipt-cutoff', 'title' => 'No orders yet', 'text' => $mine ? 'Browse the marketplace and make your first offer.' : 'Purchase requests from recyclers will appear here.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Hub</th><th>Material</th><th class="text-end">Quantity</th><th class="text-end">Price/kg</th><th class="text-end">Value</th><th>Status</th></tr></thead>
+    <thead><tr><th>Reference</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Hub</th><th>Material</th><th class="text-end">Quantity</th><th class="text-end">Price/kg</th><th class="text-end">Value</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
     <tbody>
     <?php foreach ($rows as $o):
         $agreed = $o['agreed_qty_kg'] !== null;
@@ -39,6 +39,16 @@ $mine = $side === 'recycler';
         <td><?= e($o['hub_name']) ?></td><td><?= e($o['category_name']) ?></td>
         <td class="text-end text-nowrap"><?= e(format_kg($qty)) ?></td><td class="text-end text-nowrap"><?= e(number_format((int) $price)) ?></td><td class="text-end text-nowrap"><?= e(format_ugx($total)) ?></td>
         <td><?= component('status-badge', ['status' => $o['status']]) ?><?= $turn ? ' <span class="badge text-bg-primary">Your turn</span>' : '' ?></td>
+        <?php
+        $acts = [];
+        if ($turn) {
+            $acts[] = ['label' => 'Respond', 'icon' => 'chat-dots', 'class' => 'btn-primary', 'href' => '/orders/' . $o['id']];
+        } elseif (!$mine && in_array($o['status'], ['confirmed', 'in_delivery'], true) && can('inventory.manage')) {
+            $acts[] = ['label' => 'Dispatch', 'icon' => 'truck', 'class' => 'btn-primary', 'href' => '/orders/' . $o['id']];
+        } else {
+            $acts[] = ['label' => 'Open', 'href' => '/orders/' . $o['id']];
+        } ?>
+        <td class="text-end text-nowrap"><?= component('row-actions', ['actions' => $acts]) ?></td>
       </tr>
     <?php endforeach; ?>
     </tbody>

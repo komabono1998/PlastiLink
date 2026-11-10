@@ -30,9 +30,9 @@
     <?= component('empty-state', ['icon' => 'box-seam', 'title' => 'No collections found', 'text' => $isPicker ? 'Your collections will appear here after you deliver plastic to a hub.' : 'Recorded collections will appear here.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><th>Date</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th>Hub</th><th class="text-end">Net weight</th><th class="text-end">Value</th><th>Status</th></tr></thead>
+    <thead><tr><th>Reference</th><th>Date</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th>Hub</th><th class="text-end">Net weight</th><th class="text-end">Value</th><th>Status</th><?php if (!$isPicker): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
     <tbody>
-    <?php foreach ($rows as $c): ?>
+    <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($rows as $c): ?>
       <tr>
         <td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/collections/' . $c['id'])) ?>"><?= e($c['reference']) ?></a></td>
         <td class="small text-nowrap"><?= e(format_datetime($c['recorded_at'], 'd M Y, H:i')) ?></td>
@@ -41,6 +41,20 @@
         <td class="text-end text-nowrap"><?= e(format_kg($c['net_weight_kg'])) ?></td>
         <td class="text-end text-nowrap"><?= e(format_ugx($c['total_value_ugx'])) ?></td>
         <td><?= component('status-badge', ['status' => $c['status']]) ?></td>
+        <?php if (!$isPicker):
+            $acts = [];
+            if ($c['status'] === 'pending' && can('collections.approve')) {
+                if ((int) $c['recorded_by'] !== $me) { // the person who recorded it can never approve it
+                    $acts[] = ['label' => 'Approve', 'icon' => 'check-circle', 'class' => 'btn-primary', 'post' => '/collections/' . $c['id'] . '/approve', 'confirm' => 'Approve ' . $c['reference'] . ' and issue the receipt?'];
+                }
+                $acts[] = ['label' => 'Review', 'href' => '/collections/' . $c['id']];
+            } elseif ($c['status'] === 'approved' && can('collections.reverse')) {
+                $acts[] = ['label' => 'Reverse', 'icon' => 'arrow-counterclockwise', 'class' => 'btn-outline-danger', 'href' => '/collections/' . $c['id']];
+            } else {
+                $acts[] = ['label' => 'Open', 'href' => '/collections/' . $c['id']];
+            } ?>
+        <td class="text-end text-nowrap"><?= component('row-actions', ['actions' => $acts]) ?></td>
+        <?php endif; ?>
       </tr>
     <?php endforeach; ?>
     </tbody>

@@ -23,15 +23,29 @@
     <?= component('empty-state', ['icon' => 'people', 'title' => 'No users match', 'text' => 'Try a different search or filter.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Status</th><th>Last sign-in</th></tr></thead>
+    <thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Status</th><th>Last sign-in</th><?php if (can('users.manage')): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
     <tbody>
-    <?php foreach ($users as $u): ?>
+    <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($users as $u): ?>
       <tr>
         <td><a class="fw-semibold" href="<?= e(url('/users/' . $u['id'])) ?>"><?= e($u['full_name']) ?></a></td>
         <td><?= e($u['role_name']) ?></td>
         <td class="small"><?= e($u['email'] ?? '') ?><?= ($u['email'] && $u['phone_e164']) ? '<br>' : '' ?><?= e($u['phone_e164'] ? display_phone($u['phone_e164']) : '') ?></td>
         <td><?= component('status-badge', ['status' => $u['status']]) ?></td>
         <td class="small text-nowrap"><?= e(format_datetime($u['last_login_at'])) ?></td>
+        <?php if (can('users.manage')):
+            $acts = [['label' => 'Edit', 'icon' => 'pencil', 'href' => '/users/' . $u['id'] . '/edit']];
+            // Picker and recycler accounts are approved or suspended from their own screens
+            $profileRole = in_array($u['role_slug'] ?? '', ['waste_picker', 'recycler'], true);
+            if ((int) $u['id'] !== $me && !$profileRole) {
+                if ($u['status'] === 'active') {
+                    $acts[] = ['label' => 'Suspend', 'icon' => 'slash-circle', 'class' => 'btn-outline-danger', 'post' => '/users/' . $u['id'] . '/status', 'fields' => ['status' => 'suspended'],
+                        'confirm' => 'Suspend ' . $u['full_name'] . '? They will be signed out on their next request.'];
+                } else {
+                    $acts[] = ['label' => $u['status'] === 'pending' ? 'Approve' : 'Reactivate', 'icon' => 'check-circle', 'class' => 'btn-primary', 'post' => '/users/' . $u['id'] . '/status', 'fields' => ['status' => 'active']];
+                }
+            } ?>
+        <td class="text-end text-nowrap"><?= component('row-actions', ['actions' => $acts]) ?></td>
+        <?php endif; ?>
       </tr>
     <?php endforeach; ?>
     </tbody>

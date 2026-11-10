@@ -10,14 +10,25 @@
   <?php if (!$rows): ?><?= component('empty-state', ['icon' => 'file-earmark-text', 'title' => 'No invoices yet', 'text' => 'An invoice is issued automatically when an order is complete.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Invoice</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Order</th><th class="text-end">Amount</th><th class="text-end">Outstanding</th><th>Due</th><th>Status</th></tr></thead>
+    <thead><tr><th>Invoice</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Order</th><th class="text-end">Amount</th><th class="text-end">Outstanding</th><th>Due</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
     <tbody>
     <?php foreach ($rows as $i): $out = \App\Services\InvoiceService::outstanding($i); $od = \App\Services\InvoiceService::isOverdue($i); ?>
       <tr><td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/invoices/' . $i['id'])) ?>"><?= e($i['invoice_number']) ?></a></td>
         <?php if (!$mine): ?><td><?= e($i['business_name']) ?></td><?php endif; ?>
         <td class="small"><?= e($i['order_reference']) ?></td><td class="text-end text-nowrap"><?= e(format_ugx($i['amount_ugx'])) ?></td><td class="text-end text-nowrap"><?= e(format_ugx($out)) ?></td>
         <td class="small text-nowrap"><?= e(date('d M Y', strtotime($i['due_date']))) ?></td>
-        <td><?= component('status-badge', ['status' => $i['status']]) ?><?= $od ? ' ' . component('status-badge', ['status' => 'overdue']) : '' ?></td></tr>
+        <td><?= component('status-badge', ['status' => $i['status']]) ?><?= $od ? ' ' . component('status-badge', ['status' => 'overdue']) : '' ?></td>
+        <?php
+        $acts = [];
+        if (!$mine && can('invoices.manage') && in_array($i['status'], ['issued', 'partially_paid'], true)) {
+            $acts[] = ['label' => 'Record payment', 'icon' => 'cash-coin', 'class' => 'btn-primary', 'href' => '/invoices/' . $i['id']];
+            if ($i['status'] === 'issued') {
+                $acts[] = ['label' => 'Void', 'class' => 'btn-outline-danger', 'href' => '/invoices/' . $i['id']];
+            }
+        } else {
+            $acts[] = ['label' => 'Open', 'href' => '/invoices/' . $i['id']];
+        } ?>
+        <td class="text-end text-nowrap"><?= component('row-actions', ['actions' => $acts]) ?></td></tr>
     <?php endforeach; ?>
     </tbody>
   </table></div>

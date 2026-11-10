@@ -2,6 +2,7 @@
 
 Phases follow the project plan. Every phase was tested before it was committed.
 
+- **Row actions:** list pages (users, collections, purchase orders, payout requests, payments, invoices) have an Actions column: one-click Approve/Confirm/Suspend/Reactivate where no reason is needed and the four-eyes rule allows it, and Review/Pay/Reverse/Void links to the detail page where a reason or amount is needed.
 - **Waste picker editing:** managers (Super Administrator, Hub Manager) can edit a picker's name, phone, neighbourhood, hub, address details, national ID and notes (`/pickers/{id}/edit`, migration 0023, audited with field names only, hub-scoped), and approve, suspend or reactivate from the picker list as well as the picker page.
 - **Phase 11, testing and deployment:** enforced Content-Security-Policy (no inline scripts; confirmations and printing now use data attributes), HSTS and more headers; route-by-role security suite; end-to-end journey test; load test; `create-admin`, pre-flight check, deployment package builder (single or split layout), production `.htaccess`; encrypted, verified, pruned backups with restore; runbooks, UAT scripts, user guides, data-protection notes.
 - **Phase 10, geographic and programme monitoring:** map and hotspots (Leaflet, bundled), validated coordinates, programme progress and audited target editing, Geographic and Programme reports; front-end libraries are now tracked by git.

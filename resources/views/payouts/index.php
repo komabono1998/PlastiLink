@@ -10,13 +10,28 @@
   <?php if (!$rows): ?><?= component('empty-state', ['icon' => 'cash-stack', 'title' => 'No payout requests']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th class="text-end">Amount</th><th>Method</th><th>Requested</th><th>Status</th></tr></thead>
+    <thead><tr><th>Reference</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th class="text-end">Amount</th><th>Method</th><th>Requested</th><th>Status</th><?php if (!$isPicker): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
     <tbody>
-    <?php foreach ($rows as $q): ?>
+    <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($rows as $q): ?>
       <tr><td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/payouts/' . $q['id'])) ?>"><?= e($q['reference']) ?></a></td>
         <?php if (!$isPicker): ?><td><?= e($q['picker_name']) ?><div class="small text-muted"><?= e($q['picker_code']) ?></div></td><?php endif; ?>
         <td class="text-end text-nowrap"><?= e(format_ugx($q['amount_ugx'])) ?></td><td><?= e($q['method'] === 'cash' ? 'Cash' : 'Mobile money') ?></td>
-        <td class="small text-nowrap"><?= e(format_datetime($q['requested_at'], 'd M, H:i')) ?></td><td><?= component('status-badge', ['status' => $q['status']]) ?></td></tr>
+        <td class="small text-nowrap"><?= e(format_datetime($q['requested_at'], 'd M, H:i')) ?></td><td><?= component('status-badge', ['status' => $q['status']]) ?></td>
+        <?php if (!$isPicker):
+            $acts = [];
+            if ($q['status'] === 'pending_approval' && can('payments.approve')) {
+                if ((int) $q['requested_by'] !== $me) { // four-eyes: never the requester
+                    $acts[] = ['label' => 'Approve', 'icon' => 'check-circle', 'class' => 'btn-primary', 'post' => '/payouts/' . $q['id'] . '/decision', 'fields' => ['decision' => 'approve'],
+                        'confirm' => 'Approve ' . format_ugx($q['amount_ugx']) . ' for ' . $q['picker_name'] . '?'];
+                }
+                $acts[] = ['label' => 'Review', 'href' => '/payouts/' . $q['id']];
+            } elseif ($q['status'] === 'approved' && can('payments.process')) {
+                $acts[] = ['label' => 'Pay', 'icon' => 'cash-coin', 'class' => 'btn-primary', 'href' => '/payouts/' . $q['id']];
+            } else {
+                $acts[] = ['label' => 'Open', 'href' => '/payouts/' . $q['id']];
+            } ?>
+        <td class="text-end text-nowrap"><?= component('row-actions', ['actions' => $acts]) ?></td>
+        <?php endif; ?></tr>
     <?php endforeach; ?>
     </tbody>
   </table></div>
