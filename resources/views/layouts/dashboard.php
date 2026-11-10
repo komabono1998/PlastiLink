@@ -18,28 +18,43 @@ $nav = $nav ?? [];
   <link rel="stylesheet" href="<?= e(asset('vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
   <link rel="stylesheet" href="<?= e(asset('css/plastilink.css')) ?>">
 </head>
-<body>
+<body class="app-body">
 <div class="dash">
   <div class="sidebar-backdrop"></div>
-  <aside class="sidebar p-3" aria-label="Main navigation">
-    <a class="brand brand-on-dark d-block mb-4 px-2" href="<?= e(url('/')) ?>"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></a>
-    <nav class="nav flex-column gap-1">
-      <?php foreach ($nav as $item): ?>
-        <a class="nav-link<?= !empty($item['active']) ? ' active' : '' ?>" href="<?= e($item['href']) ?>"<?= !empty($item['active']) ? ' aria-current="page"' : '' ?>><i class="bi bi-<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?></a>
-      <?php endforeach; ?>
-    </nav>
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand sidebar-brand d-block" href="<?= e(url('/')) ?>"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></a>
+    <div class="sidebar-panel">
+      <?php if (can('collections.record')): ?>
+        <a class="btn btn-light rounded-pill w-100 fw-semibold mb-3" href="<?= e(url('/collections/new')) ?>"><i class="bi bi-plus-lg"></i> Record collection</a>
+      <?php elseif (can('pickers.register')): ?>
+        <a class="btn btn-light rounded-pill w-100 fw-semibold mb-3" href="<?= e(url('/pickers/register')) ?>"><i class="bi bi-person-plus"></i> Register picker</a>
+      <?php endif; ?>
+      <nav class="nav flex-column gap-1">
+        <?php foreach ($nav as $item): ?>
+          <a class="nav-link<?= !empty($item['active']) ? ' active' : '' ?>" href="<?= e($item['href']) ?>"<?= !empty($item['active']) ? ' aria-current="page"' : '' ?>><i class="bi bi-<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?></a>
+        <?php endforeach; ?>
+      </nav>
+    </div>
   </aside>
 
   <div class="dash-main">
-    <header class="dash-topbar d-flex align-items-center gap-3 px-3 py-2">
+    <header class="dash-topbar d-flex align-items-center gap-3 px-3 px-lg-4 py-2">
       <button class="btn btn-outline-primary d-lg-none" type="button" data-sidebar-toggle aria-label="Open menu" aria-expanded="false"><i class="bi bi-list"></i></button>
-      <h1 class="h5 mb-0"><?= e($title ?? '') ?></h1>
+      <h1 class="h5 mb-0 text-nowrap"><?= e($title ?? '') ?></h1>
+      <?php if (count($nav) > 3): ?>
+      <form class="topbar-search d-none d-md-flex" role="search" data-prevent-submit>
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input class="form-control" type="search" list="nav-jump" data-nav-jump placeholder="Jump to a page…" aria-label="Jump to a page" autocomplete="off">
+        <datalist id="nav-jump"><?php foreach ($nav as $item): ?><option value="<?= e($item['label']) ?>" data-href="<?= e($item['href']) ?>"></option><?php endforeach; ?></datalist>
+      </form>
+      <?php endif; ?>
       <div class="ms-auto d-flex align-items-center gap-2">
         <?php if ($authUser = auth_user()): ?>
           <div class="text-end lh-sm d-none d-sm-block">
             <div class="fw-semibold small"><?= e($authUser['full_name']) ?></div>
             <div class="small text-muted"><?= e($authUser['role_name']) ?></div>
           </div>
+          <span class="avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr(trim((string) $authUser['full_name']), 0, 1))) ?></span>
           <form method="post" action="<?= e(url('/logout')) ?>" class="m-0">
             <?= csrf_field() ?>
             <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button>

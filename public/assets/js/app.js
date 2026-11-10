@@ -262,6 +262,20 @@
     if (t.tagName !== 'FORM' && !window.confirm(t.dataset.confirm)) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
+  // "Jump to a page" box in the top bar: pick a menu item from the list (or type its name and press Enter)
+  var jump = document.querySelector('[data-nav-jump]');
+  if (jump) {
+    var go = function () {
+      var v = jump.value.trim().toLowerCase();
+      var list = document.getElementById(jump.getAttribute('list'));
+      if (!v || !list) return;
+      var o = [].find.call(list.options, function (x) { return x.value.toLowerCase() === v; });
+      if (o && o.dataset.href) window.location.href = o.dataset.href;
+    };
+    jump.addEventListener('change', go);
+    jump.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+  }
+
   // Loading state on forms: prevents double submission
   document.querySelectorAll('form[data-loading]').forEach(function (form) {
     form.addEventListener('submit', function () {

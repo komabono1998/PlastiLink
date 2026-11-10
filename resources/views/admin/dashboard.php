@@ -2,7 +2,7 @@
 /** @var int $usersTotal @var int $usersActive @var int $usersPending @var int $usersSuspended
  *  @var int $pickersTotal @var int $pickersPending @var int $recyclersTotal @var int $recyclersPending @var int $hubsActive
  *  @var array $byRole @var int $failed24h @var array $recentLogins @var array $today @var array $allTime @var array $stock
- *  @var int $transfersTransit @var int $adjustmentsPending @var int $payoutsToApprove @var int $payoutsToPay @var array $orderStats @var ?array $fin */
+ *  @var array $recent @var int $transfersTransit @var int $adjustmentsPending @var int $payoutsToApprove @var int $payoutsToPay @var array $orderStats @var ?array $fin */
 $user = auth_user();
 $hour = (int) date('G');
 $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
@@ -78,9 +78,9 @@ $links = [
 <section class="mb-4" aria-labelledby="quick-h">
   <h2 class="h6 text-muted" id="quick-h">Quick links</h2>
   <div class="row g-3">
-  <?php foreach ($links as [$href, $icon, $label, $desc, $show]): if (!$show) { continue; } ?>
+  <?php $shown = 0; foreach ($links as [$href, $icon, $label, $desc, $show]): if (!$show) { continue; } ?>
     <div class="col-6 col-md-4 col-xl-3">
-      <a class="quick-tile" href="<?= e(url($href)) ?>">
+      <a class="quick-tile<?= $shown++ === 0 ? ' is-featured' : '' ?>" href="<?= e(url($href)) ?>">
         <span class="stat-icon"><i class="bi bi-<?= e($icon) ?>" aria-hidden="true"></i></span>
         <span><span class="d-block fw-semibold"><?= e($label) ?></span><span class="d-block small text-muted"><?= e($desc) ?></span></span>
       </a>
@@ -88,6 +88,34 @@ $links = [
   <?php endforeach; ?>
   </div>
 </section>
+
+<?php if (can('collections.view')): ?>
+<section class="card mb-4" aria-labelledby="recent-h">
+  <div class="card-head">
+    <h2 class="h6 mb-0" id="recent-h">Recent collections</h2>
+    <a class="small fw-semibold" href="<?= e(url('/collections')) ?>">View all</a>
+  </div>
+  <?php if (!$recent): ?>
+    <?= component('empty-state', ['icon' => 'box-seam', 'title' => 'No collections yet', 'text' => 'Recorded collections will appear here.']) ?>
+  <?php else: ?>
+  <div class="table-responsive"><table class="table align-middle mb-0">
+    <thead><tr><th>Reference</th><th>Picker</th><th>Hub</th><th>Recorded</th><th class="text-end">Net weight</th><th>Status</th></tr></thead>
+    <tbody>
+    <?php foreach ($recent as $c): ?>
+      <tr>
+        <td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/collections/' . $c['id'])) ?>"><?= e($c['reference']) ?></a></td>
+        <td><?= e($c['picker_name']) ?></td>
+        <td><?= e($c['hub_name']) ?></td>
+        <td class="small text-nowrap"><?= e(format_datetime($c['recorded_at'], 'd M Y, H:i')) ?></td>
+        <td class="text-end text-nowrap"><?= e(format_kg($c['net_weight_kg'])) ?></td>
+        <td><?= component('status-badge', ['status' => $c['status']]) ?></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+  <?php endif; ?>
+</section>
+<?php endif; ?>
 
 <h2 class="h6 text-muted">At a glance</h2>
 <div class="row g-3 mb-4">
