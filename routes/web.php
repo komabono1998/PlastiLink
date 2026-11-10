@@ -102,6 +102,8 @@ $router->get('/pickers', [PickerController::class, 'index'], [$auth, new Permiss
 $router->get('/pickers/register', [PickerController::class, 'create'], [$auth, new PermissionMiddleware('pickers.register')]);
 $router->post('/pickers', [PickerController::class, 'store'], [$auth, new PermissionMiddleware('pickers.register')]);
 $router->get('/pickers/{id:\d+}', [PickerController::class, 'show'], [$auth, new PermissionMiddleware('pickers.view')]);
+$router->get('/pickers/{id:\d+}/edit', [PickerController::class, 'edit'], [$auth, new PermissionMiddleware('pickers.manage')]);
+$router->post('/pickers/{id:\d+}/update', [PickerController::class, 'update'], [$auth, new PermissionMiddleware('pickers.manage')]);
 $router->post('/pickers/{id:\d+}/decision', [PickerController::class, 'decide'], [$auth, new PermissionMiddleware('pickers.manage')]);
 
 // Prices (history is append-only)

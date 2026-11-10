@@ -69,6 +69,68 @@ final class PickerService
                 'warning' => Picker::similarExists(trim($in['full_name']), (int) $in['neighbourhood_id'], $id)];
     }
 
+    /** Edit a picker's details. Hub staff can only keep or choose hubs inside their own scope. @return array{errors:array<string,string>} */
+    public static function update(int $pickerId, array $in, array $actor): array
+    {
+        $p = self::findAccessible($pickerId, $actor);
+        if (!$p) {
+            return ['errors' => ['_' => 'Picker not found.']];
+        }
+        $errors = Validator::validate($in, [
+            'full_name'        => ['Full name', 'required|max:150'],
+            'phone'            => ['Phone number', 'required|phone'],
+            'neighbourhood_id' => ['Neighbourhood', 'required|int'],
+            'national_id'      => ['National ID', 'max:30'],
+            'address_details'  => ['Address details', 'max:190'],
+            'notes'            => ['Notes', 'max:1000'],
+        ]);
+        if (!isset($errors['neighbourhood_id']) && !array_key_exists((int) ($in['neighbourhood_id'] ?? 0), Neighbourhood::options())) {
+            $errors['neighbourhood_id'] = 'Choose a neighbourhood from the list.';
+        }
+        // Roles that cannot see the national ID cannot change it either
+        $nid = AuthService::hasRole('super_admin', 'hub_manager')
+            ? strtoupper(trim((string) ($in['national_id'] ?? '')))
+            : (string) ($p['national_id'] ?? '');
+        if ($nid !== '' && !isset($errors['national_id']) && !preg_match('/^[A-Z0-9\- ]{5,30}$/', $nid)) {
+            $errors['national_id'] = 'National ID may only contain letters, numbers and dashes.';
+        }
+        $phone = Phone::normalize((string) ($in['phone'] ?? ''));
+        if ($phone && !isset($errors['phone']) && User::phoneTaken($phone, (int) $p['user_id'])) {
+            $errors['phone'] = 'This phone number belongs to another account.';
+        }
+        $hubId = (int) ($in['preferred_hub_id'] ?? 0) ?: null;
+        $scope = HubScope::forUser($actor);
+        if ($hubId !== null && !array_key_exists($hubId, Hub::options($scope))) {
+            $errors['preferred_hub_id'] = 'Choose one of your own hubs.';
+        } elseif ($hubId === null && $scope !== null) {
+            $errors['preferred_hub_id'] = 'Choose the hub this picker sells at.';
+        }
+        if ($errors) {
+            return ['errors' => $errors];
+        }
+
+        $new = [
+            'full_name' => trim((string) $in['full_name']), 'phone' => (string) $phone,
+            'neighbourhood_id' => (int) $in['neighbourhood_id'], 'preferred_hub_id' => $hubId,
+            'national_id' => $nid === '' ? null : $nid,
+            'address_details' => trim((string) ($in['address_details'] ?? '')) ?: null,
+            'notes' => trim((string) ($in['notes'] ?? '')) ?: null,
+        ];
+        $old = [
+            'full_name' => $p['full_name'], 'phone' => $p['phone_e164'], 'neighbourhood_id' => (int) $p['neighbourhood_id'],
+            'preferred_hub_id' => $p['preferred_hub_id'] !== null ? (int) $p['preferred_hub_id'] : null, 'national_id' => $p['national_id'],
+            'address_details' => $p['address_details'], 'notes' => $p['notes'],
+        ];
+        $changed = array_keys(array_filter($new, static fn($v, $k) => $v !== $old[$k], ARRAY_FILTER_USE_BOTH));
+        if ($changed) {
+            Database::transaction(function () use ($pickerId, $p, $new, $actor, $changed): void {
+                Picker::updateDetails($pickerId, (int) $p['user_id'], $new);
+                AuditLog::write('picker.updated', (int) $actor['id'], 'picker', $pickerId, ['fields' => $changed]);
+            });
+        }
+        return ['errors' => []];
+    }
+
     /** @return array{errors:array<string,string>, id?:int} */
     public static function registerPublic(array $in): array
     {

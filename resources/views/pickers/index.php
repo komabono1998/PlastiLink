@@ -22,7 +22,18 @@
     <?= component('empty-state', ['icon' => 'person-badge', 'title' => 'No waste pickers found', 'text' => 'Registered pickers will appear here.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Picker ID</th><th>Name</th><th>Phone</th><th>Neighbourhood</th><th>Hub</th><th>Status</th><th>Verified</th></tr></thead>
+    <?php
+    $manage = can('pickers.manage');
+    $qs = http_build_query(array_filter($f + ['page' => $pg['page'] ?? 1], static fn($x) => $x !== '' && $x !== null));
+    $back = $qs !== '' ? '/pickers?' . $qs : '/pickers';
+    $statusBtn = static function (array $p, string $decision, string $label, string $cls, string $confirm = '') use ($back): string {
+        return '<form method="post" action="' . e(url('/pickers/' . $p['id'] . '/decision')) . '" class="d-inline"'
+            . ($confirm !== '' ? ' data-confirm="' . e($confirm) . '"' : '') . '>' . csrf_field()
+            . '<input type="hidden" name="decision" value="' . e($decision) . '"><input type="hidden" name="back" value="' . e($back) . '">'
+            . '<button class="btn btn-sm ' . $cls . '" type="submit">' . $label . '</button></form>';
+    };
+    ?>
+    <thead><tr><th>Picker ID</th><th>Name</th><th>Phone</th><th>Neighbourhood</th><th>Hub</th><th>Status</th><th>Verified</th><?php if ($manage): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
     <tbody>
     <?php foreach ($pickers as $p): ?>
       <tr>
@@ -33,6 +44,14 @@
         <td><?= e($p['hub_name'] ?? '—') ?></td>
         <td><?= component('status-badge', ['status' => $p['account_status']]) ?></td>
         <td><?= component('status-badge', ['status' => $p['verification_status']]) ?></td>
+        <?php if ($manage): ?>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/pickers/' . $p['id'] . '/edit')) ?>"><i class="bi bi-pencil-square"></i> Edit</a>
+          <?php if ($p['account_status'] === 'pending'): ?><?= $statusBtn($p, 'approve', 'Approve', 'btn-primary') ?>
+          <?php elseif ($p['account_status'] === 'active'): ?><?= $statusBtn($p, 'suspend', 'Suspend', 'btn-outline-danger', 'Suspend ' . $p['full_name'] . '? They will be signed out.') ?>
+          <?php elseif ($p['account_status'] === 'suspended'): ?><?= $statusBtn($p, 'reactivate', 'Reactivate', 'btn-outline-primary') ?><?php endif; ?>
+        </td>
+        <?php endif; ?>
       </tr>
     <?php endforeach; ?>
     </tbody>

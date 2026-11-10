@@ -24,6 +24,8 @@ $act = static function (string $decision, string $label, string $cls, string $co
         <?php if ($canSeeNationalId): ?><dt class="col-sm-4">National ID</dt><dd class="col-sm-8"><?= e($p['national_id'] ?? 'Not provided') ?></dd><?php endif; ?>
         <dt class="col-sm-4">Registered</dt><dd class="col-sm-8"><?= e(format_datetime($p['account_created'])) ?> · <?= e($p['registered_by_name'] ? 'by ' . $p['registered_by_name'] : 'self-registered') ?></dd>
         <dt class="col-sm-4">Consent</dt><dd class="col-sm-8">Version <?= e($p['consent_version']) ?>, <?= e(format_datetime($p['consented_at'])) ?></dd>
+        <?php if ($p['address_details']): ?><dt class="col-sm-4">Address details</dt><dd class="col-sm-8"><?= e($p['address_details']) ?></dd><?php endif; ?>
+        <?php if ($p['notes']): ?><dt class="col-sm-4">Notes</dt><dd class="col-sm-8"><?= nl2br(e($p['notes'])) ?></dd><?php endif; ?>
         <?php if ($p['review_note']): ?><dt class="col-sm-4">Review note</dt><dd class="col-sm-8"><?= e($p['review_note']) ?></dd><?php endif; ?>
       </dl>
     </div></div>
@@ -34,6 +36,7 @@ $act = static function (string $decision, string $label, string $cls, string $co
     <div class="card"><div class="card-body">
       <h2 class="h6">Actions</h2>
       <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" href="<?= e(url('/pickers/' . $p['id'] . '/edit')) ?>"><i class="bi bi-pencil-square"></i> Edit details</a>
         <?php if ($st === 'pending'): ?><?= $act('approve', '<i class="bi bi-check-circle"></i> Approve', 'btn-primary') ?><?php endif; ?>
         <?php if ($st === 'active'): ?><?= $act('suspend', '<i class="bi bi-slash-circle"></i> Suspend', 'btn-outline-danger', 'Suspend this picker? They will be signed out.') ?><?php endif; ?>
         <?php if ($st === 'suspended'): ?><?= $act('reactivate', '<i class="bi bi-arrow-counterclockwise"></i> Reactivate', 'btn-primary') ?><?php endif; ?>

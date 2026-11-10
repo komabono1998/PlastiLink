@@ -102,6 +102,15 @@ final class Picker
         return $id;
     }
 
+    /** Update the editable details (the account name and phone live on the users row). */
+    public static function updateDetails(int $id, int $userId, array $d): void
+    {
+        $pdo = Database::connection();
+        $pdo->prepare('UPDATE users SET full_name = ?, phone_e164 = ? WHERE id = ?')->execute([$d['full_name'], $d['phone'], $userId]);
+        $pdo->prepare('UPDATE pickers SET neighbourhood_id = ?, preferred_hub_id = ?, national_id = ?, address_details = ?, notes = ? WHERE id = ?')
+            ->execute([$d['neighbourhood_id'], $d['preferred_hub_id'], $d['national_id'], $d['address_details'], $d['notes'], $id]);
+    }
+
     public static function setVerification(int $id, string $status): void
     {
         Database::connection()->prepare('UPDATE pickers SET verification_status = ? WHERE id = ?')->execute([$status, $id]);

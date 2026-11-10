@@ -82,6 +82,29 @@ final class PickerController extends Controller
         ]);
     }
 
+    public function edit(Request $request, string $id): string
+    {
+        $p = PickerService::findAccessible((int) $id, AuthService::user());
+        if (!$p) {
+            return $this->notFound($request);
+        }
+        $scope = HubScope::forUser(AuthService::user());
+        return $this->page($request, 'pickers/edit', 'Edit ' . $p['full_name'], [
+            'p' => $p, 'neighbourhoods' => Neighbourhood::options(), 'hubs' => Hub::options($scope), 'hubRequired' => $scope !== null,
+            'canSeeNationalId' => AuthService::hasRole('super_admin', 'hub_manager'),
+        ]);
+    }
+
+    public function update(Request $request, string $id): string
+    {
+        $r = PickerService::update((int) $id, $request->body, AuthService::user());
+        if ($r['errors']) {
+            return isset($r['errors']['_']) ? $this->notFound($request) : $this->invalid($r['errors'], $request->body, '/pickers/' . (int) $id . '/edit');
+        }
+        Session::flash('success', 'Picker details saved.');
+        return redirect('/pickers/' . (int) $id);
+    }
+
     public function decide(Request $request, string $id): string
     {
         $r = PickerService::decide((int) $id, (string) $request->input('decision', ''), $request->input('reason'), AuthService::user());

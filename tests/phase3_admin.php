@@ -314,6 +314,32 @@ check('Suspended picker is locked out and reactivation works', loc(req($c, 'GET'
     return $pdo->query("SELECT status FROM users WHERE id = {$pu['id']}")->fetchColumn() === 'active';
 })());
 
+// editing picker details
+$ed = ['full_name' => 'P3 Public Picker Edited', 'phone' => '0700088311', 'neighbourhood_id' => $nbId, 'preferred_hub_id' => $hubA,
+       'address_details' => 'Near the <b>market</b>', 'national_id' => '', 'notes' => 'Prefers morning drop-offs'];
+check('Hub manager sees the edit form for a picker at their hub', str_contains(req($hmA, 'GET', "/pickers/{$pu['pid']}/edit")['body'], 'Save changes'));
+check('Hub B manager gets "not found" for a hub A picker edit form', req($hmB, 'GET', "/pickers/{$pu['pid']}/edit")['status'] === 404);
+check('Hub operator cannot open the edit form', req($hoA, 'GET', "/pickers/{$pu['pid']}/edit")['status'] === 403);
+$r = postVia($hmB, '/pickers', "/pickers/{$pu['pid']}/update", $ed);
+check('Hub B manager cannot save changes to a hub A picker', $r['status'] === 404 && $pdo->query("SELECT full_name FROM users WHERE id = {$pu['id']}")->fetchColumn() === 'P3 Public Picker');
+$r = postVia($hoA, '/pickers', "/pickers/{$pu['pid']}/update", $ed);
+check('Hub operator cannot save changes either', $r['status'] === 403);
+$r = postVia($hmA, "/pickers/{$pu['pid']}/edit", "/pickers/{$pu['pid']}/update", ['phone' => 'abc'] + $ed);
+check('Invalid phone is rejected and nothing changes', $pdo->query("SELECT full_name FROM users WHERE id = {$pu['id']}")->fetchColumn() === 'P3 Public Picker');
+$r = postVia($hmA, "/pickers/{$pu['pid']}/edit", "/pickers/{$pu['pid']}/update", ['preferred_hub_id' => $hubB] + $ed);
+check('Hub manager cannot move a picker to another hub', $pdo->query("SELECT preferred_hub_id FROM pickers WHERE id = {$pu['pid']}")->fetchColumn() == $hubA && str_contains(strip_tags(follow($hmA, $r)['body']), 'own hubs'));
+$r = postVia($hmA, "/pickers/{$pu['pid']}/edit", "/pickers/{$pu['pid']}/update", ['phone' => '0700088201'] + $ed);
+check('A phone number used by another account is refused', str_contains(strip_tags(follow($hmA, $r)['body']), 'another account'));
+postVia($hmA, "/pickers/{$pu['pid']}/edit", "/pickers/{$pu['pid']}/update", $ed);
+$row = $pdo->query("SELECT u.full_name, u.phone_e164, p.notes, p.address_details FROM pickers p JOIN users u ON u.id = p.user_id WHERE p.id = {$pu['pid']}")->fetch();
+check('Valid edit saves name, phone, address and notes', $row['full_name'] === 'P3 Public Picker Edited' && $row['phone_e164'] === '+256700088311' && $row['notes'] === 'Prefers morning drop-offs');
+$page = req($hmA, 'GET', "/pickers/{$pu['pid']}")['body'];
+check('Saved details are shown, escaped', str_contains($page, 'Prefers morning drop-offs') && !str_contains($page, '<b>market</b>'));
+check('Edit is audited with field names only', (int) $pdo->query("SELECT COUNT(*) FROM audit_logs WHERE action = 'picker.updated' AND entity_id = {$pu['pid']}")->fetchColumn() === 1
+    && !str_contains((string) $pdo->query("SELECT details FROM audit_logs WHERE action = 'picker.updated' AND entity_id = {$pu['pid']}")->fetchColumn(), '0700088311'));
+check('Picker list offers Edit and a status action to managers', str_contains(req($hmA, 'GET', '/pickers?q=P3+Public')['body'], "/pickers/{$pu['pid']}/edit"));
+check('Picker list shows no Actions column to a hub operator', !str_contains(req($hoA, 'GET', '/pickers?q=P3+Public')['body'], "/pickers/{$pu['pid']}/edit"));
+
 // rejection
 $r = postVia(newClient(), '/register', '/register', ['full_name' => 'P3 Rejected Picker', 'phone' => '0700088302'] + $pdata);
 $ru = $pdo->query("SELECT u.id, p.id AS pid FROM users u JOIN pickers p ON p.user_id = u.id WHERE u.phone_e164 = '+256700088302'")->fetch();
