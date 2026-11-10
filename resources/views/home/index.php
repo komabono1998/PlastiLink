@@ -17,8 +17,11 @@ $goalKg = $tg && $tg['kg'] !== null ? number_format((int) $tg['kg']) : null;
         <p class="small mt-3 mb-0 text-white-50">Already registered? <a class="link-light" href="<?= e(url('/login')) ?>">Sign in</a></p>
       </div>
       <div class="col-lg-5">
-        <div class="hero-orb mx-auto" aria-hidden="true"><i class="bi bi-recycle"></i></div>
-        <div class="hero-card mt-n3">
+        <figure class="hero-photo mb-0">
+          <img src="<?= e(asset('img/gulu-monument.jpg')) ?>" width="1100" height="733" alt="The elephant monument in Gulu City, Uganda" fetchpriority="high">
+          <figcaption><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Gulu City, Uganda</figcaption>
+        </figure>
+        <div class="hero-card hero-card-overlap">
           <div class="hero-step"><span><i class="bi bi-speedometer2" aria-hidden="true"></i></span> Weighed at a collection hub</div>
           <div class="hero-step"><span><i class="bi bi-receipt" aria-hidden="true"></i></span> Digital receipt for every sale</div>
           <div class="hero-step"><span><i class="bi bi-phone" aria-hidden="true"></i></span> Paid to your registered phone</div>
@@ -58,9 +61,9 @@ $goalKg = $tg && $tg['kg'] !== null ? number_format((int) $tg['kg']) : null;
   <div class="row align-items-center g-4 g-lg-5">
     <div class="col-lg-6">
       <div class="about-art">
-        <div class="about-tile t1"><i class="bi bi-people" aria-hidden="true"></i><span>Waste pickers</span></div>
-        <div class="about-tile t2"><i class="bi bi-shop" aria-hidden="true"></i><span>Collection hubs</span></div>
-        <div class="about-tile t3"><i class="bi bi-building" aria-hidden="true"></i><span>Recyclers</span></div>
+        <div class="about-tile t1"><img src="<?= e(asset('img/sorting-bottles.jpg')) ?>" width="760" height="506" loading="lazy" alt="A worker sorting plastic bottles into large collection sacks"><span>Sorted by hand</span></div>
+        <div class="about-tile t2"><img src="<?= e(asset('img/gulu-street.jpg')) ?>" width="760" height="570" loading="lazy" alt="A street junction in Gulu City"><span>In Gulu City</span></div>
+        <div class="about-tile t3"><img src="<?= e(asset('img/pet-bales.jpg')) ?>" width="760" height="570" loading="lazy" alt="Stacked bales of compressed plastic bottles"><span>Ready to recycle</span></div>
         <?php if ($goalKg): ?>
           <div class="about-badge"><small>12-month goal</small><strong><?= e($goalKg) ?></strong><small>kg collected and sold</small></div>
         <?php endif; ?>
@@ -167,4 +170,20 @@ $goalKg = $tg && $tg['kg'] !== null ? number_format((int) $tg['kg']) : null;
       <a class="btn btn-outline-light btn-lg" href="<?= e(url('/register/recycler')) ?>">Register as a recycler</a>
     </div>
   </div>
+</section>
+
+<!-- Photo credits (required by the Creative Commons licences) -->
+<section class="container pb-4" id="credits">
+  <p class="small text-muted mb-0">
+    <strong>Photo credits.</strong> Photos from Wikimedia Commons, resized and compressed.
+    Gulu monument: <a href="https://commons.wikimedia.org/wiki/File:Gulu_city.jpg" rel="noopener noreferrer" target="_blank">"Gulu city"</a> by Micheal Kaluba,
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer" target="_blank">CC BY-SA 4.0</a>.
+    Street: <a href="https://commons.wikimedia.org/wiki/File:Gulu_city_clock,_Uganda.jpg" rel="noopener noreferrer" target="_blank">"Gulu city clock, Uganda"</a> by Owobusingye,
+    <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener noreferrer" target="_blank">CC BY 4.0</a>.
+    Sorting bottles (taken in Thailand): <a href="https://commons.wikimedia.org/wiki/File:DFC_4507_A_worker_sorting_recyclable_plastic_bottles_into_large_collection_sacks_along_a_quiet_urban_street.jpg" rel="noopener noreferrer" target="_blank">"DFC 4507"</a> by PattayaPatrol,
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer" target="_blank">CC BY-SA 4.0</a>.
+    Bales: <a href="https://commons.wikimedia.org/wiki/File:Bales_of_PET_bottles_stacked.jpg" rel="noopener noreferrer" target="_blank">"Bales of PET bottles stacked"</a> by Grendelkhan,
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer" target="_blank">CC BY-SA 4.0</a>.
+    The last two show the kind of work involved and are not PlastiLink's own pickers or hubs.
+  </p>
 </section>

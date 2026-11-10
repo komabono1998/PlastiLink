@@ -261,3 +261,16 @@ body { background: var(--pl-bg); color: var(--pl-charcoal); }
   .about-badge { left: 36%; width: 112px; height: 112px; }
   .dark-band { margin: 1rem .5rem 0; border-radius: 1.5rem; }
 }
+
+/* Photos on the public home page */
+.hero-photo { position: relative; border-radius: 1.5rem; overflow: hidden; border: 3px solid rgba(255,255,255,.22); box-shadow: 0 20px 44px rgba(0,0,0,.35); }
+.hero-photo img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 40%; }
+.hero-photo figcaption { position: absolute; left: .9rem; top: .9rem; background: rgba(14,38,30,.78); color: #fff; padding: .3rem .8rem; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+.hero-photo figcaption .bi { color: var(--pl-lime); }
+.hero-card-overlap { margin: -1.6rem 1rem 0; background: rgba(14,38,30,.9); }
+.about-tile { overflow: hidden; padding: 0; justify-content: flex-end; }
+.about-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.about-tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,38,30,.82) 0%, rgba(14,38,30,0) 55%); }
+.about-tile span { position: relative; z-index: 1; padding: 0 1rem 1rem; }
+.about-tile.t1 img { object-position: 60% 50%; }
+.about-tile.t2 img { object-position: 50% 80%; }
