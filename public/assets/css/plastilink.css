@@ -121,3 +121,16 @@ body { background: var(--pl-bg); color: var(--pl-charcoal); }
 }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* Admin dashboard: greeting banner, attention cards, quick-link tiles */
+.dash-hero { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center;
+  background: linear-gradient(135deg, var(--pl-mint), #fff 70%); border: 1px solid var(--pl-border); border-radius: var(--pl-radius);
+  padding: 1.25rem 1.5rem; box-shadow: var(--pl-shadow); }
+.attn-card { border-left: 4px solid var(--pl-amber); }
+.attn-count { min-width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #FFF1D6; color: #7a4d00; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; }
+.quick-tile { display: flex; align-items: center; gap: .75rem; height: 100%; padding: .85rem 1rem; background: #fff; color: inherit;
+  border: 1px solid var(--pl-border); border-radius: var(--pl-radius); text-decoration: none; box-shadow: var(--pl-shadow);
+  transition: transform .12s ease, border-color .12s ease; }
+.quick-tile:hover { border-color: var(--pl-primary); transform: translateY(-2px); color: inherit; }
+@media (prefers-reduced-motion: reduce) { .quick-tile { transition: none; } .quick-tile:hover { transform: none; } }

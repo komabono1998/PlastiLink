@@ -50,6 +50,8 @@ final class DashboardController extends Controller
             'fin'            => can('finance.view') ? \App\Services\FinanceService::summary() : null,
             'transfersTransit' => StockTransfer::pendingReceipts(null),
             'adjustmentsPending' => StockAdjustment::pendingCount(null),
+            'payoutsToApprove' => can('payments.approve') ? \App\Models\PaymentRequest::pendingApprovalCount(null) : 0,
+            'payoutsToPay'   => can('payments.process') ? \App\Models\Payment::awaitingProcessCount(null) : 0,
             'byRole'         => User::countByRole(),
             'failed24h'      => LoginAttempt::failedSince('24 HOUR'),
             'recentLogins'   => LoginAttempt::recentSuccessful(5),
