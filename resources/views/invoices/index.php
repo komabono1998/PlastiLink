@@ -10,7 +10,7 @@
   <?php if (!$rows): ?><?= component('empty-state', ['icon' => 'file-earmark-text', 'title' => 'No invoices yet', 'text' => 'An invoice is issued automatically when an order is complete.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Invoice</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Order</th><th class="text-end">Amount</th><th class="text-end">Outstanding</th><th>Due</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+    <thead><tr><th>Invoice</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Order</th><th class="text-end">Amount</th><th class="text-end">Outstanding</th><th>Due</th><th>Status</th><th class="text-end th-actions">Actions</th></tr></thead>
     <tbody>
     <?php foreach ($rows as $i): $out = \App\Services\InvoiceService::outstanding($i); $od = \App\Services\InvoiceService::isOverdue($i); ?>
       <tr><td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/invoices/' . $i['id'])) ?>"><?= e($i['invoice_number']) ?></a></td>

@@ -25,7 +25,7 @@ $mine = $side === 'recycler';
     <?= component('empty-state', ['icon' => 'receipt-cutoff', 'title' => 'No orders yet', 'text' => $mine ? 'Browse the marketplace and make your first offer.' : 'Purchase requests from recyclers will appear here.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Hub</th><th>Material</th><th class="text-end">Quantity</th><th class="text-end">Price/kg</th><th class="text-end">Value</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+    <thead><tr><th>Reference</th><?php if (!$mine): ?><th>Recycler</th><?php endif; ?><th>Hub</th><th>Material</th><th class="text-end">Quantity</th><th class="text-end">Price/kg</th><th class="text-end">Value</th><th>Status</th><th class="text-end th-actions">Actions</th></tr></thead>
     <tbody>
     <?php foreach ($rows as $o):
         $agreed = $o['agreed_qty_kg'] !== null;

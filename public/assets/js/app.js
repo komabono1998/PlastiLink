@@ -3,18 +3,24 @@
   'use strict';
 
   // Mobile sidebar toggle
-  var toggle = document.querySelector('[data-sidebar-toggle]');
+  var toggles = document.querySelectorAll('[data-sidebar-toggle]');
   var sidebar = document.querySelector('.sidebar');
   var backdrop = document.querySelector('.sidebar-backdrop');
   function setOpen(open) {
     if (!sidebar) return;
     sidebar.classList.toggle('open', open);
     if (backdrop) backdrop.classList.toggle('open', open);
-    if (toggle) toggle.setAttribute('aria-expanded', String(open));
+    toggles.forEach(function (t) { t.setAttribute('aria-expanded', String(open)); });
   }
-  if (toggle) toggle.addEventListener('click', function () { setOpen(!sidebar.classList.contains('open')); });
+  toggles.forEach(function (t) { t.addEventListener('click', function () { setOpen(!sidebar.classList.contains('open')); }); });
   if (backdrop) backdrop.addEventListener('click', function () { setOpen(false); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+
+  // Installable app: register the service worker (needs https, or localhost for testing). It only caches static files.
+  var swMeta = document.querySelector('meta[name="pl-sw"]');
+  if (swMeta && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register(swMeta.content).catch(function () { /* optional feature */ }); });
+  }
 
   // Show/hide password
   document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {

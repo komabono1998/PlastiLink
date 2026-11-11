@@ -33,7 +33,7 @@
             . '<button class="btn btn-sm ' . $cls . '" type="submit">' . $label . '</button></form>';
     };
     ?>
-    <thead><tr><th>Picker ID</th><th>Name</th><th>Phone</th><th>Neighbourhood</th><th>Hub</th><th>Status</th><th>Verified</th><?php if ($manage): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
+    <thead><tr><th>Picker ID</th><th>Name</th><th>Phone</th><th>Neighbourhood</th><th>Hub</th><th>Status</th><th>Verified</th><?php if ($manage): ?><th class="text-end th-actions">Actions</th><?php endif; ?></tr></thead>
     <tbody>
     <?php foreach ($pickers as $p): ?>
       <tr>
@@ -45,8 +45,7 @@
         <td><?= component('status-badge', ['status' => $p['account_status']]) ?></td>
         <td><?= component('status-badge', ['status' => $p['verification_status']]) ?></td>
         <?php if ($manage): ?>
-        <td class="text-end text-nowrap">
-          <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/pickers/' . $p['id'] . '/edit')) ?>"><i class="bi bi-pencil-square"></i> Edit</a>
+        <td class="text-end text-nowrap row-actions"><a class="btn btn-sm btn-outline-primary" href="<?= e(url('/pickers/' . $p['id'] . '/edit')) ?>"><i class="bi bi-pencil-square"></i> Edit</a>
           <?php if ($p['account_status'] === 'pending'): ?><?= $statusBtn($p, 'approve', 'Approve', 'btn-primary') ?>
           <?php elseif ($p['account_status'] === 'active'): ?><?= $statusBtn($p, 'suspend', 'Suspend', 'btn-outline-danger', 'Suspend ' . $p['full_name'] . '? They will be signed out.') ?>
           <?php elseif ($p['account_status'] === 'suspended'): ?><?= $statusBtn($p, 'reactivate', 'Reactivate', 'btn-outline-primary') ?><?php endif; ?>

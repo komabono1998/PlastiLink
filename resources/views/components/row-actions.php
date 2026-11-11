@@ -5,7 +5,7 @@
  * @var array<int,array{label:string,icon?:string,href?:string,post?:string,fields?:array<string,string>,class?:string,confirm?:string}> $actions
  */
 ?>
-<div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+<div class="row-actions d-inline-flex flex-wrap gap-1 justify-content-end">
 <?php foreach ($actions as $act):
     $cls = 'btn btn-sm ' . ($act['class'] ?? 'btn-outline-primary');
     $label = (!empty($act['icon']) ? '<i class="bi bi-' . e($act['icon']) . '"></i> ' : '') . e($act['label']); ?>

@@ -3,7 +3,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PlastiLink">
+  <meta name="pl-sw" content="<?= e(url('/sw.js')) ?>">
+  <link rel="manifest" href="<?= e(url('/manifest.webmanifest')) ?>">
+  <link rel="apple-touch-icon" href="<?= e(asset('img/icons/apple-touch-icon.png')) ?>">
   <title><?= e(($title ?? '') !== '' ? $title . ' · ' : '') ?><?= e(config('app.name')) ?></title>
   <meta name="description" content="<?= e(config('app.tagline')) ?>">
   <meta name="theme-color" content="#086B52">

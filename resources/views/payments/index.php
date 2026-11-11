@@ -18,7 +18,7 @@ $staff = !in_array($role, ['waste_picker', 'recycler'], true);
   <?php if (!$rows): ?><?= component('empty-state', ['icon' => 'credit-card', 'title' => 'No payments found']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><th>Who</th><th>Type</th><th class="text-end">Amount</th><th>Method</th><th>Status</th><th>Reconciled</th><th class="text-end">Actions</th></tr></thead>
+    <thead><tr><th>Reference</th><th>Who</th><th>Type</th><th class="text-end">Amount</th><th>Method</th><th>Status</th><th>Reconciled</th><th class="text-end th-actions">Actions</th></tr></thead>
     <tbody>
     <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($rows as $p): ?>
       <tr><td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/payments/' . $p['id'])) ?>"><?= e($p['reference']) ?></a></td>

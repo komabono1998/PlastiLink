@@ -23,7 +23,7 @@
     <?= component('empty-state', ['icon' => 'people', 'title' => 'No users match', 'text' => 'Try a different search or filter.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Status</th><th>Last sign-in</th><?php if (can('users.manage')): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
+    <thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Status</th><th>Last sign-in</th><?php if (can('users.manage')): ?><th class="text-end th-actions">Actions</th><?php endif; ?></tr></thead>
     <tbody>
     <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($users as $u): ?>
       <tr>

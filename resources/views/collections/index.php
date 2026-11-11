@@ -30,7 +30,7 @@
     <?= component('empty-state', ['icon' => 'box-seam', 'title' => 'No collections found', 'text' => $isPicker ? 'Your collections will appear here after you deliver plastic to a hub.' : 'Recorded collections will appear here.']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><th>Date</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th>Hub</th><th class="text-end">Net weight</th><th class="text-end">Value</th><th>Status</th><?php if (!$isPicker): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
+    <thead><tr><th>Reference</th><th>Date</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th>Hub</th><th class="text-end">Net weight</th><th class="text-end">Value</th><th>Status</th><?php if (!$isPicker): ?><th class="text-end th-actions">Actions</th><?php endif; ?></tr></thead>
     <tbody>
     <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($rows as $c): ?>
       <tr>

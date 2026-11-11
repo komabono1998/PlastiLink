@@ -10,7 +10,7 @@
   <?php if (!$rows): ?><?= component('empty-state', ['icon' => 'cash-stack', 'title' => 'No payout requests']) ?>
   <?php else: ?>
   <div class="table-responsive"><table class="table align-middle mb-0">
-    <thead><tr><th>Reference</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th class="text-end">Amount</th><th>Method</th><th>Requested</th><th>Status</th><?php if (!$isPicker): ?><th class="text-end">Actions</th><?php endif; ?></tr></thead>
+    <thead><tr><th>Reference</th><?php if (!$isPicker): ?><th>Picker</th><?php endif; ?><th class="text-end">Amount</th><th>Method</th><th>Requested</th><th>Status</th><?php if (!$isPicker): ?><th class="text-end th-actions">Actions</th><?php endif; ?></tr></thead>
     <tbody>
     <?php $me = (int) (auth_user()['id'] ?? 0); foreach ($rows as $q): ?>
       <tr><td class="text-nowrap"><a class="fw-semibold" href="<?= e(url('/payouts/' . $q['id'])) ?>"><?= e($q['reference']) ?></a></td>
