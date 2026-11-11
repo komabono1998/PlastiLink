@@ -27,7 +27,7 @@ $out = $root . '/deploy/dist';
 @mkdir($out, 0755, true);
 
 $exclude = [
-    '#^\.git(/|$)#', '#^\.gitignore$#', '#^\.gitattributes$#', '#^\.claude(/|$)#', '#^tests(/|$)#', '#^docs(/|$)#', '#^deploy/(?!preflight\.php$)#',
+    '#^\.git(/|$)#', '#^\.gitignore$#', '#^\.gitattributes$#', '#^\.claude(/|$)#', '#^tests(/|$)#', '#^docs(/|$)#', '#^android(/|$)#', '#^deploy/(?!preflight\.php$)#',
     '#^seed\.php$#', '#^config/.*\.local\.php$#', '#^storage/logs/.+#', '#^storage/receipts/.+#', '#^storage/backups/.+#',
     '#^public/uploads/.+#', '#\.log$#', '#^CHANGELOG\.md$#',
 ];
