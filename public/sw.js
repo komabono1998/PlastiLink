@@ -3,12 +3,12 @@
 // It NEVER stores pages or API responses: signed-in pages hold personal and financial data and always come from the server.
 'use strict';
 
-var VERSION = 'pl-static-v1';
+var VERSION = 'pl-static-v2';
 var BASE = new URL('./', self.location).pathname;      // e.g. /PlastiLink/ or /
 var OFFLINE = BASE + 'offline.html';
 
 self.addEventListener('install', function (event) {
-  event.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll([OFFLINE, BASE + 'assets/img/icons/icon-192.png']); }).then(function () { return self.skipWaiting(); }));
+  event.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll([OFFLINE, BASE + 'assets/img/brand/logo-reversed.png', BASE + 'assets/img/icons/icon-192.png']); }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener('activate', function (event) {

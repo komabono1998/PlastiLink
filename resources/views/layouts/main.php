@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PlastiLink">
   <meta name="pl-sw" content="<?= e(url('/sw.js')) ?>">
+  <link rel="icon" href="<?= e(url('/favicon.ico')) ?>" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= e(asset('img/brand/favicon-32.png')) ?>">
   <link rel="manifest" href="<?= e(url('/manifest.webmanifest')) ?>">
   <link rel="apple-touch-icon" href="<?= e(asset('img/icons/apple-touch-icon.png')) ?>">
   <title><?= e(($title ?? '') !== '' ? $title . ' · ' : '') ?><?= e(config('app.name')) ?></title>
@@ -22,7 +24,7 @@
 
   <nav class="site-nav navbar navbar-expand-md navbar-dark">
     <div class="container">
-      <a class="brand navbar-brand" href="<?= e(url('/')) ?>"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></a>
+      <a class="navbar-brand py-0" href="<?= e(url('/')) ?>"><img class="site-logo" src="<?= e(asset('img/brand/logo-reversed.png')) ?>" width="192" height="40" alt="PlastiLink"></a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -51,7 +53,7 @@
     <div class="container">
       <div class="row g-4">
         <div class="col-md-5">
-          <span class="brand brand-on-dark d-inline-block mb-2"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></span>
+          <a href="<?= e(url('/')) ?>" class="d-inline-block mb-3"><img class="site-logo" src="<?= e(asset('img/brand/logo-reversed.png')) ?>" width="230" height="48" alt="PlastiLink"></a>
           <p class="small mb-0 footer-muted"><?= e(config('app.tagline')) ?> Connecting waste pickers, collection hubs and recyclers in Gulu City, Uganda.</p>
         </div>
         <div class="col-6 col-md-3">

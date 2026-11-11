@@ -19,6 +19,8 @@ $nav = $nav ?? [];
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PlastiLink">
   <meta name="pl-sw" content="<?= e(url('/sw.js')) ?>">
+  <link rel="icon" href="<?= e(url('/favicon.ico')) ?>" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= e(asset('img/brand/favicon-32.png')) ?>">
   <link rel="manifest" href="<?= e(url('/manifest.webmanifest')) ?>">
   <link rel="apple-touch-icon" href="<?= e(asset('img/icons/apple-touch-icon.png')) ?>">
   <link rel="stylesheet" href="<?= e(asset('vendor/bootstrap/bootstrap.min.css')) ?>">
@@ -29,7 +31,10 @@ $nav = $nav ?? [];
 <div class="dash">
   <div class="sidebar-backdrop"></div>
   <aside class="sidebar" aria-label="Main navigation">
-    <a class="brand sidebar-brand d-block" href="<?= e(url('/')) ?>"><span class="brand-plasti">Plasti</span><span class="brand-link">Link</span></a>
+    <a class="sidebar-brand d-block" href="<?= e(url('/')) ?>" aria-label="PlastiLink home">
+      <img class="logo-on-dark" src="<?= e(asset('img/brand/logo-reversed.png')) ?>" width="192" height="40" alt="PlastiLink">
+      <img class="logo-on-light" src="<?= e(asset('img/brand/logo.png')) ?>" width="192" height="40" alt="" aria-hidden="true">
+    </a>
     <div class="sidebar-panel">
       <?php if (can('collections.record')): ?>
         <a class="btn btn-light rounded-pill w-100 fw-semibold mb-3" href="<?= e(url('/collections/new')) ?>"><i class="bi bi-plus-lg"></i> Record collection</a>

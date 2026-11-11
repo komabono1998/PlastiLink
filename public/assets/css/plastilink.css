@@ -309,3 +309,15 @@ a, button, .btn, .nav-link { touch-action: manipulation; -webkit-tap-highlight-c
 }
 @media print { .bottom-nav { display: none !important; } }
 .dash-topbar h1 { min-width: 0; }
+
+/* ---------- Logo ---------- */
+.site-logo { display: block; height: 40px; width: auto; }
+.site-footer .site-logo { height: 48px; }
+.sidebar-brand img { height: 40px; width: auto; max-width: 100%; }
+.sidebar-brand .logo-on-light { display: none; }            /* the mobile drawer is green: use the light-on-dark logo */
+@media (min-width: 992px) {                                  /* the desktop sidebar header is white: use the dark-on-light logo */
+  .app-body .sidebar-brand .logo-on-dark { display: none; }
+  .app-body .sidebar-brand .logo-on-light { display: block; }
+  .sidebar-brand { padding-top: 1.1rem; padding-bottom: 1.1rem; }
+}
+@media (max-width: 575.98px) { .site-logo { height: 34px; } }

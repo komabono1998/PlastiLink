@@ -29,3 +29,7 @@
 - For the Play Store you would sign with a private release key and a live https address. Do not reuse the test key.
 
 Installing the test APK: copy it to the phone, open it, and allow "install unknown apps" for the app you opened it from. Phone and PC must be on the same Wi-Fi, and the PC must be on with XAMPP's Apache and MySQL running.
+
+## Logo
+
+The supplied logo is in public/assets/img/brand/: logo.png (dark text, for light backgrounds), logo-reversed.png (light text, for dark backgrounds), logo-mark.png (icon only) and the favicons. The phone/app icons in public/assets/img/icons/ and ndroid/res/ are cut from the same icon. To change the logo, replace these files and rebuild the APK.
